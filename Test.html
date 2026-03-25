@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ObjectCreator Tester - Tkinter-like Grid System</title>
+    <link rel="stylesheet" href="Tester.css">
+</head>
+<body>
+    <h1>🎨 ObjectCreator Tester - Tkinter-like Grid System</h1>
+
+    <!-- Floating message box -->
+    <div id="messageBox" class="tester_message_box tester_message_box_hidden">
+        <span id="messageText"></span>
+        <button id="closeMessage" class="tester_message_close">&times;</button>
+    </div>
+
+    <div class="main_container">
+        <!-- Left Panel: Object Generator -->
+        <div class="tester_object_creator_panel">
+            <div class="tester_generator_section">
+                <div class="tester_header_with_icon">
+                    <h2>Object Generator</h2>
+                    <button id="btnGridConfig" class="tester_icon_button" title="Configure Grid">⚙️</button>
+                </div>
+
+                <!-- Tag and Parent -->
+                <div class="tester_form_row">
+                    <div class="tester_form_group">
+                        <label for="tagSelect" class="tester_label">HTML Tag:</label>
+                        <select id="tagSelect" class="tester_select">
+                            <option value="button">Button</option>
+                            <option value="input">Input</option>
+                            <option value="label">Label (span)</option>
+                            <option value="div">Div Container</option>
+                            <option value="p">Paragraph</option>
+                            <option value="textarea">Textarea</option>
+                            <option value="select">Select Dropdown</option>
+                            <option value="span">Span</option>
+                            <option value="collapsible">Collapsible Div</option>
+                            <option value="tabs">Tabs Div</option>
+                        </select>
+                    </div>
+                    <div class="tester_form_group">
+                        <label for="parentSelect" class="tester_label">Parent Container:</label>
+                        <select id="parentSelect" class="tester_select">
+                            <option value="preview">Preview Area</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ID and Class (labels line, inputs line) -->
+                <div class="tester_form_row">
+                    <div><label class="tester_label">ID:</label></div>
+                    <div><label class="tester_label">Class Name:</label></div>
+                </div>
+                <div class="tester_form_row">
+                    <div><input type="text" id="objId" class="tester_input" placeholder="element_id"></div>
+                    <div><input type="text" id="objClass" class="tester_input" placeholder="css_class"></div>
+                </div>
+
+                <!-- Grid Position: Row, Column, RowSpan, ColSpan -->
+                <div class="tester_form_row_4">
+                    <div><label for="objRow" class="tester_label">Row (1‑based):</label><input type="number" id="objRow" class="tester_input" value="1" min="1"></div>
+                    <div><label for="objCol" class="tester_label">Column (1‑based):</label><input type="number" id="objCol" class="tester_input" value="1" min="1"></div>
+                    <div><label for="objRowSpan" class="tester_label">Row Span:</label><input type="number" id="objRowSpan" class="tester_input" placeholder="1" min="1"></div>
+                    <div><label for="objColSpan" class="tester_label">Column Span:</label><input type="number" id="objColSpan" class="tester_input" placeholder="1" min="1"></div>
+                </div>
+
+                <!-- Pad X, Pad Y (margin) and Internal Pad -->
+                <div class="tester_form_row_4">
+                    <div><label for="padx" class="tester_label">Pad X (margin):</label><input type="number" id="padx" class="tester_input" value="0" step="1"></div>
+                    <div><label for="pady" class="tester_label">Pad Y (margin):</label><input type="number" id="pady" class="tester_input" value="0" step="1"></div>
+                    <div><label for="ipadx" class="tester_label">Internal Pad X (padding):</label><input type="number" id="ipadx" class="tester_input" value="0" step="1"></div>
+                    <div><label for="ipady" class="tester_label">Internal Pad Y (padding):</label><input type="number" id="ipady" class="tester_input" value="0" step="1"></div>
+                </div>
+
+                <!-- Sticky and CSS Editor button inline -->
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div class="tester_form_group" style="flex: 1;">
+                        <label class="tester_label">Sticky (like Tkinter):</label>
+                        <div class="tester_sticky_group">
+                            <label class="tester_sticky_group_label"><input type="checkbox" id="stickyN" class="tester_sticky_group_input"> N</label>
+                            <label class="tester_sticky_group_label"><input type="checkbox" id="stickyS" class="tester_sticky_group_input"> S</label>
+                            <label class="tester_sticky_group_label"><input type="checkbox" id="stickyE" class="tester_sticky_group_input"> E</label>
+                            <label class="tester_sticky_group_label"><input type="checkbox" id="stickyW" class="tester_sticky_group_input"> W</label>
+                        </div>
+                    </div>
+                    <button id="btnOpenCssEditor" class="tester_button_secondary" style="margin-bottom: 0;">🎨 CSS Editor</button>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="margin-top: 15px;">
+                    <button id="btnAddObject" class="tester_button_secondary">➕ Add Object</button>
+                    <button id="btnSaveEdit" class="tester_button_secondary" style="display:none;">💾 Save Changes</button>
+                    <button id="btnCancelEdit" class="tester_button_danger" style="display:none;">❌ Cancel Edit</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Layout Test -->
+        <div class="tester_layout_test_panel">
+            <div class="tester_preview_section">
+                <div class="tester_header_with_icon">
+                    <h2>📐 Visual Preview</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="btnPreviewCss" class="tester_icon_button" title="Edit Preview CSS">🎨</button>
+                        <button id="btnSeparateWindow" class="tester_icon_button" title="Open preview in separate window">🔍</button>
+                    </div>
+                </div>
+                <div id="previewGrid" class="tester_preview_grid"></div>
+            </div>
+
+            <div class="tester_object_list_section">
+                <h2>📋 Object Selector</h2>
+                <div id="objectList">
+                    <div style="color: #999; text-align: center; padding: 20px;">No objects created yet</div>
+                </div>
+            </div>
+
+            <div class="tester_code_section">
+                <h2 style="color: #f8f8f2; border-bottom-color: #555;">💻 Generated Code</h2>
+                <div class="tester_code_toolbar">
+                    <button id="btnCopyCode" class="tester_button">📋 Copy Code</button>
+                    <button id="btnLoadCode" class="tester_button">▶️ Load Code</button>
+                    <button id="btnSaveCode" class="tester_button">💾 Save Code to File</button>
+                </div>
+                <textarea id="codeDisplay" class="tester_code_display" rows="6" style="font-family: monospace; background: #1e1e1e; color: #d4d4d4; width: 100%; resize: vertical;"></textarea>
+
+                <!-- Preview Grid CSS Editor -->
+                <div class="tester_css_tab">
+                    <h3 style="color: #ddd;">Preview Grid CSS</h3>
+                    <textarea id="previewCss" rows="4" class="tester_css_tab_textarea" placeholder="Custom CSS for the preview grid container..."></textarea>
+                    <div class="tester_code_toolbar" style="margin-top: 5px;">
+                        <button id="btnCopyPreviewCss" class="tester_button">📋 Copy CSS</button>
+                        <button id="btnApplyPreviewCss" class="tester_button">✅ Apply CSS</button>
+                        <button id="btnLoadPreviewCss" class="tester_button">📂 Load CSS from Code</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Grid Configuration -->
+    <div id="gridConfigModal" class="tester_modal">
+        <div class="tester_modal_content">
+            <div class="tester_modal_header">
+                <h2>Grid Configuration</h2>
+                <span class="tester_modal_close">&times;</span>
+            </div>
+            <div id="gridConfigContent"></div>
+            <button id="btnApplyGridConfig" class="tester_button">Apply Weights</button>
+        </div>
+    </div>
+
+    <!-- CSS Editor Modal (shared for objects and preview) -->
+    <div id="cssEditorModal" class="tester_css_editor_modal">
+        <div class="tester_css_editor_content">
+            <div class="tester_css_editor_header">
+                <h2>CSS Editor</h2>
+                <input type="text" id="cssEditorSearch" class="tester_css_editor_search" placeholder="Search...">
+                <span class="tester_modal_close">&times;</span>
+            </div>
+            <div class="tester_css_editor_body">
+                <div id="cssEditorSections" class="tester_css_editor_sections"></div>
+                <div class="tester_css_editor_preview">
+                    <div id="cssEditorPreview" class="tester_css_editor_preview_element">Sample Text</div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #666;">Live preview</div>
+                </div>
+            </div>
+            <div class="tester_css_editor_footer">
+                <button id="cssEditorApply" class="tester_button">Apply to Selected Object</button>
+                <button id="cssEditorCancel" class="tester_button_danger">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="web/widgets/js/ObjectCreator.js"></script>
+    <script src="CssEditor.js"></script>
+    <script src="Tester.js"></script>
+</body>
+</html>
