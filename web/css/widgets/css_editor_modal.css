@@ -1,0 +1,70 @@
+/* #region css_editor_modal */
+.tester_css_editor_modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tester_css_editor_content {
+    display: flex;
+    flex-direction: column;
+    width: 80%;
+    max-width: 800px;
+    height: 80vh;
+    background-color: var(--tester_color_bg_secondary);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tester_css_editor_header {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--tester_spacing_md);
+    border-bottom: 1px solid var(--tester_color_border);
+}
+
+.tester_css_editor_form {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--tester_spacing_md);
+}
+
+.tester_css_editor_buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--tester_spacing_sm);
+    padding: var(--tester_spacing_md);
+    border-top: 1px solid var(--tester_color_border);
+}
+
+.tester_css_editor_property_row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.tester_css_editor_property_row .tester_label {
+    width: 120px;
+    flex-shrink: 0;
+}
+
+.tester_css_editor_property_row .tester_input,
+.tester_css_editor_property_row .tester_select {
+    flex: 1;
+}
+
+.tester_css_editor_section {
+    margin-bottom: 16px;
+    border: 1px solid var(--tester_color_border);
+    border-radius: 4px;
+    padding: 8px;
+}
+/* #endregion */

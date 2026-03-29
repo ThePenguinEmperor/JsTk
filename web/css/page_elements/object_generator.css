@@ -1,0 +1,25 @@
+/* #region object_generator */
+.tester_object_generator {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    /* Dimensions */
+    padding: var(--tester_spacing_md);
+    gap: var(--tester_spacing_md);
+}
+
+.tester_sticky_grid {
+    max-width: 200px;
+    margin: 0 auto;
+}
+.tester_sticky_label {
+    font-size: 0.75rem;
+    color: var(--tester_color_text_secondary);
+    text-align: center;
+}
+.tester_checkbox {
+    margin: 0 auto;
+    display: block;
+}
+/* #endregion */
+

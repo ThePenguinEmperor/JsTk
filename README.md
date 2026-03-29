@@ -95,7 +95,7 @@ Works in all modern browsers that support:
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](Documents/LICENSE) file for details.
 
 ## Author
 

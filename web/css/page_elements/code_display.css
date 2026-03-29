@@ -1,0 +1,10 @@
+/* #region code_display */
+.tester_code_display {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    /* Dimensions */
+    margin-top: var(--tester_spacing_md);
+    gap: var(--tester_spacing_sm);
+}
+/* #endregion */

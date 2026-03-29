@@ -1,10 +1,4 @@
 // #region object_creator
-/**
- * ObjectCreator: Tkinter-like widget system for grid-based UI creation.
- * Usage: document.oc.input({parent, row, col, sticky, rowSpan, colSpan, id, class_name, style, events, padx, pady, ipadx, ipady})
- * Returns a JS element placed in a CSS Grid with configurable rows/columns.
- * Row and column indices are 1‑based.
- */
 class ObjectCreator {
     constructor() {
         if (!window._object_creator_instance) {
@@ -14,27 +8,42 @@ class ObjectCreator {
         return window._object_creator_instance;
     }
 
-    // #region apis
     object_generate(tag, params = {}) {
-        let { parent, row, col, sticky, rowSpan, colSpan, id, class_name, style, events, padx, pady, ipadx, ipady } = params;
+        let {
+            parent,
+            row, col, rowSpan, colSpan, sticky,
+            id, class_name, style,
+            text, value,
+            events,
+            padx, pady, ipadx, ipady,
+            attributes = {},
+            properties = {},
+            ...rest
+        } = params;
+
         let el = document.createElement(tag);
         if (id) el.id = id;
         if (class_name) el.className = class_name;
-        if (style) el.style.cssText = style;
 
-        // Apply padding/margin (Tkinter-like)
-        if (padx !== undefined || pady !== undefined || ipadx !== undefined || ipady !== undefined) {
-            let margin = '';
-            let padding = '';
-            if (padx !== undefined) margin += ` ${padx}px`;
-            if (pady !== undefined) margin += ` ${pady}px`;
-            if (margin) el.style.margin = margin.trim();
-            if (ipadx !== undefined) padding += ` ${ipadx}px`;
-            if (ipady !== undefined) padding += ` ${ipady}px`;
-            if (padding) el.style.padding = padding.trim();
+        if (style) {
+            if (typeof style === 'string') {
+                el.style.cssText = style;
+            } else if (typeof style === 'object') {
+                Object.assign(el.style, style);
+            }
         }
 
-        // Bind events
+        if (text !== undefined) el.textContent = text;
+        if (value !== undefined) {
+            if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+                el.value = value;
+            } else {
+                el.setAttribute('value', value);
+            }
+        }
+
+        this._apply_margin_padding(el, padx, pady, ipadx, ipady);
+
         if (events && typeof events === 'object') {
             for (let [evt, handler] of Object.entries(events)) {
                 if (typeof handler === 'function') {
@@ -43,28 +52,20 @@ class ObjectCreator {
             }
         }
 
+        for (let [key, val] of Object.entries(attributes)) {
+            el.setAttribute(key, val);
+        }
+        for (let [key, val] of Object.entries(properties)) {
+            el[key] = val;
+        }
+        for (let [key, val] of Object.entries(rest)) {
+            el.setAttribute(key, val);
+        }
+
         this._handle_grid_placement(parent, el, row, col, sticky, rowSpan, colSpan);
         return el;
     }
 
-    input(params) {
-        return this.object_generate('input', params);
-    }
-
-    button(params) {
-        let btn = this.object_generate('button', params);
-        if (params && params.text) btn.textContent = params.text;
-        return btn;
-    }
-
-    label(params) {
-        let lbl = this.object_generate('span', params);
-        if (params && params.text) lbl.textContent = params.text;
-        return lbl;
-    }
-    // #endregion apis
-
-    // #region grid_management
     configure_column(parent, col, { weight = 0, minsize = 0, pad = 0 } = {}) {
         if (!parent._gridColumns) parent._gridColumns = [];
         parent._gridColumns[col - 1] = { weight, minsize, pad };
@@ -140,9 +141,7 @@ class ObjectCreator {
         }
         parent.style.gridTemplateRows = rows.join(' ');
     }
-    // #endregion grid_management
 
-    // #region widget_operations
     remove_widget(widget) {
         let el = null;
         if (typeof widget === 'string') {
@@ -199,9 +198,7 @@ class ObjectCreator {
             }
         }
     }
-    // #endregion widget_operations
 
-    // #region helpers
     _handle_grid_placement(parent, el, row, col, sticky, rowSpan, colSpan) {
         if (!parent) parent = document.body;
         if (!(parent instanceof HTMLElement)) return;
@@ -238,12 +235,10 @@ class ObjectCreator {
 
     _apply_sticky(el, sticky) {
         if (!sticky) {
-            el.style.justifySelf = 'start';
-            el.style.alignSelf = 'start';
+            el.style.justifySelf = 'center';
+            el.style.alignSelf = 'center';
             return;
         }
-
-        // Horizontal
         if (sticky.includes('e') && sticky.includes('w')) {
             el.style.justifySelf = 'stretch';
         } else if (sticky.includes('e')) {
@@ -251,10 +246,8 @@ class ObjectCreator {
         } else if (sticky.includes('w')) {
             el.style.justifySelf = 'start';
         } else {
-            el.style.justifySelf = 'start';
+            el.style.justifySelf = 'center';
         }
-
-        // Vertical
         if (sticky.includes('n') && sticky.includes('s')) {
             el.style.alignSelf = 'stretch';
         } else if (sticky.includes('n')) {
@@ -262,14 +255,23 @@ class ObjectCreator {
         } else if (sticky.includes('s')) {
             el.style.alignSelf = 'end';
         } else {
-            el.style.alignSelf = 'start';
+            el.style.alignSelf = 'center';
         }
     }
-    // #endregion helpers
+
+    _apply_margin_padding(el, padx, pady, ipadx, ipady) {
+        let margin = '';
+        let padding = '';
+        if (padx !== undefined) margin += ` ${padx}px`;
+        if (pady !== undefined) margin += ` ${pady}px`;
+        if (margin) el.style.margin = margin.trim();
+        if (ipadx !== undefined) padding += ` ${ipadx}px`;
+        if (ipady !== undefined) padding += ` ${ipady}px`;
+        if (padding) el.style.padding = padding.trim();
+    }
 }
 
-// Attach singleton to document.oc
 if (!document.oc) {
     document.oc = new ObjectCreator();
 }
-// #endregion object_creator
+// #endregion

@@ -1,0 +1,54 @@
+/* #region message_box */
+.tester_message_box {
+    /* Layout */
+    position: fixed;
+    top: var(--tester_spacing_md);
+    right: var(--tester_spacing_md);
+    /* Dimensions */
+    max-width: 320px;
+    padding: var(--tester_spacing_sm) var(--tester_spacing_md);
+    /* Colors */
+    background-color: var(--tester_color_bg_secondary);
+    border-left: 4px solid;
+    /* Borders */
+    border-radius: 4px;
+    /* Effects */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    /* Z-index */
+    z-index: 1000;
+}
+
+.tester_message_box_success {
+    /* Borders */
+    border-left-color: var(--tester_color_success);
+}
+
+.tester_message_box_warning {
+    /* Borders */
+    border-left-color: var(--tester_color_warning);
+}
+
+.tester_message_box_error {
+    /* Borders */
+    border-left-color: var(--tester_color_error);
+}
+
+.tester_message_content {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* Dimensions */
+    gap: var(--tester_spacing_md);
+}
+
+.tester_message_close {
+    /* Colors */
+    background: none;
+    border: none;
+    /* Typography */
+    font-size: var(--tester_font_size_large);
+    cursor: pointer;
+    color: var(--tester_color_text_secondary);
+}
+/* #endregion */

@@ -1,0 +1,24 @@
+/* #region preview_grid */
+.tester_preview_grid {
+    /* Layout */
+    display: grid;
+    /* Dimensions */
+    flex: 1;
+    min-height: 0;
+    padding: var(--tester_spacing_md);
+    /* Colors */
+    background-color: var(--tester_color_bg_primary);
+    /* Borders */
+    border: 1px solid var(--tester_color_border);
+    border-radius: 4px;
+    resize: both;
+    overflow: auto;
+}
+
+.tester_preview_grid > * {
+    /* Borders */
+    border: 1px dashed var(--tester_color_border);
+    /* Dimensions */
+    padding: var(--tester_spacing_xs);
+}
+/* #endregion */

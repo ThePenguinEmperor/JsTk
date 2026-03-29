@@ -1,0 +1,32 @@
+/* #region root_variables */
+:root {
+    /* Colors */
+    --tester_color_bg_primary: #f9fafb;
+    --tester_color_bg_secondary: #ffffff;
+    --tester_color_bg_tertiary: #f3f4f6;
+    --tester_color_text_primary: #111827;
+    --tester_color_text_secondary: #4b5563;
+    --tester_color_border: #e5e7eb;
+    --tester_color_accent: #3b82f6;
+    --tester_color_accent_hover: #2563eb;
+    --tester_color_success: #10b981;
+    --tester_color_warning: #f59e0b;
+    --tester_color_error: #ef4444;
+
+    /* Typography */
+    --tester_font_family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --tester_font_size_small: 0.875rem;
+    --tester_font_size_base: 1rem;
+    --tester_font_size_large: 1.125rem;
+    --tester_font_weight_normal: 400;
+    --tester_font_weight_medium: 500;
+    --tester_font_weight_bold: 600;
+
+    /* Spacing */
+    --tester_spacing_xs: 0.25rem;
+    --tester_spacing_sm: 0.5rem;
+    --tester_spacing_md: 1rem;
+    --tester_spacing_lg: 1.5rem;
+    --tester_spacing_xl: 2rem;
+}
+/* #endregion */

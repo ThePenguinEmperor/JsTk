@@ -1,0 +1,14 @@
+/* #region preview_css_editor */
+.tester_css_section {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    /* Dimensions */
+    width: 100%;
+    padding: var(--tester_spacing_md);
+    /* Colors */
+    background-color: transparent;
+    /* Borders */
+    border-bottom: 1px solid var(--tester_color_border);
+}
+/* #endregion */
