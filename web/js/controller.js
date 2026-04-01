@@ -336,7 +336,7 @@ class Controller {
 
     // CSS operations
     open_css_editor() {
-        let editor = new CssEditor((css, el) => this.on_css_applied(css, el));
+        let editor = new CssEditor((css, el) => this.on_css_applied(css, el), this.element_margin);
         editor.open_for(this.preview_grid.get_element());
     }
 
