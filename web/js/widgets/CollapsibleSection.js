@@ -25,6 +25,9 @@ class CollapsibleSection {
                 border-radius: 4px;
                 margin-bottom: 12px;
                 overflow: hidden;
+                flex-shrink: 0;
+                width: 100%;
+                box-sizing: border-box;
             }
             .collapsible_header {
                 background-color: #f3f4f6;
@@ -34,13 +37,23 @@ class CollapsibleSection {
                 align-items: center;
                 cursor: pointer;
                 font-weight: 500;
+                min-height: 40px;
+                flex-shrink: 0;
+                gap: 12px;
             }
             .collapsible_title {
                 font-size: 1rem;
+                word-break: break-word;
+                flex: 1;
             }
             .collapsible_content {
                 padding: 12px;
                 border-top: 1px solid #e5e7eb;
+                overflow: auto;
+                max-height: 300px;
+                width: 100%;
+                box-sizing: border-box;
+                background-color: #fff;
             }
             .collapsible_toggle {
                 background: none;
@@ -49,6 +62,12 @@ class CollapsibleSection {
                 font-size: 12px;
                 padding: 2px 6px;
                 border-radius: 4px;
+                flex-shrink: 0;
+                width: 24px;
+                height: 24px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
             }
             .collapsible_toggle:hover {
                 background-color: #e5e7eb;
@@ -86,7 +105,6 @@ class CollapsibleSection {
             this.contentBuilder(this.contentDiv);
         }
 
-        // Force hidden state after builder (in case builder changed it)
         this.contentDiv.style.display = 'none';
         this.isCollapsed = true;
         this.toggleBtn.textContent = '▼';

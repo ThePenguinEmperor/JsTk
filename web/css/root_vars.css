@@ -28,5 +28,28 @@
     --tester_spacing_md: 1rem;
     --tester_spacing_lg: 1.5rem;
     --tester_spacing_xl: 2rem;
+
+    /* Object list colors */
+    --tester_color_object_list_bg_0: #e3f2fd;
+    --tester_color_object_list_bg_1: #bbdefb;
+    --tester_color_object_list_bg_2: #90caf9;
+    --tester_color_object_list_bg_3: #64b5f6;
+    --tester_color_object_list_bg_4: #42a5f5;
+    --tester_color_object_list_bg_5: #2196f3;
+    --tester_color_object_list_bg_6: #1e88e5;
+    --tester_color_object_list_bg_7: #1976d2;
+    --tester_color_object_list_bg_8: #1565c0;
+    --tester_color_object_list_bg_9: #0d47a1;
+
+    --tester_color_object_list_text_0: #0d47a1;
+    --tester_color_object_list_text_1: #0d47a1;
+    --tester_color_object_list_text_2: #0d47a1;
+    --tester_color_object_list_text_3: #0d47a1;
+    --tester_color_object_list_text_4: #ffffff;
+    --tester_color_object_list_text_5: #ffffff;
+    --tester_color_object_list_text_6: #ffffff;
+    --tester_color_object_list_text_7: #ffffff;
+    --tester_color_object_list_text_8: #ffffff;
+    --tester_color_object_list_text_9: #ffffff;
 }
 /* #endregion */

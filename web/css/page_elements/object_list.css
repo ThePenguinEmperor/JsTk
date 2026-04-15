@@ -1,37 +1,80 @@
-/* #region object_list */
-.tester_object_list {
-    /* Layout */
+/* #region object_list_styles */
+.list_container {
     display: flex;
     flex-direction: column;
-    /* Dimensions */
+    min-height: 0;
+    flex: 1;
+    overflow: hidden;
+    width: 100%;
+}
+
+.tester_object_list {
+    display: flex;
+    flex-direction: column;
     gap: var(--tester_spacing_sm);
-    overflow-y: auto;
-    max-height: 200px;
+    padding: var(--tester_spacing_sm);
+    overflow: auto;          /* both scrollbars when needed */
+    flex: 1;
+    min-height: 0;
+    border: 1px solid var(--tester_color_border);
+    border-radius: 4px;
+    background-color: var(--tester_color_bg_secondary);
 }
 
 .tester_object_item {
-    /* Layout */
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* Dimensions */
     padding: var(--tester_spacing_sm);
-    /* Colors */
     background-color: var(--tester_color_bg_primary);
-    /* Borders */
     border: 1px solid var(--tester_color_border);
     border-radius: 4px;
+    flex-shrink: 0;
 }
 
 .tester_object_info {
-    /* Typography */
     font-size: var(--tester_font_size_small);
+    word-break: break-word;
+    white-space: normal;
+    flex: 1;
+    margin-right: var(--tester_spacing_sm);
 }
 
 .tester_object_actions {
-    /* Layout */
     display: flex;
-    /* Dimensions */
     gap: var(--tester_spacing_sm);
+    flex-shrink: 0;
+}
+
+/* Collapsible sections inside object list */
+.object_list_collapsible {
+    margin-bottom: var(--tester_spacing_sm);
+    min-width: 0;
+}
+
+.object_list_collapsible .collapsible_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--tester_spacing_sm);
+    border: 1px solid var(--tester_color_border);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.object_list_collapsible .collapsible_content {
+    padding: var(--tester_spacing_sm);
+    margin-left: 20px;
+    border-left: 2px solid var(--tester_color_border);
+}
+
+.object_list_child_container {
+    margin-left: 20px;
+    padding-left: var(--tester_spacing_sm);
+    border-left: 2px solid var(--tester_color_border);
+}
+
+.object_list_confirm_modal button {
+    margin: 0 var(--tester_spacing_sm);
 }
 /* #endregion */

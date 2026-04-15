@@ -1,4 +1,4 @@
-// #region object_generator
+// #region constructor_and_build
 class ObjectGenerator {
     constructor(controller) {
         this.controller = controller;
@@ -7,7 +7,7 @@ class ObjectGenerator {
         this.parent_select = null;
         this.id_input = null;
         this.class_input = null;
-        this.text_input = null;               // new
+        this.text_input = null;
         this.row_input = null;
         this.col_input = null;
         this.row_span_input = null;
@@ -24,9 +24,9 @@ class ObjectGenerator {
         this.save_btn = null;
         this.cancel_btn = null;
         this.css_editor_btn = null;
+        this.widget_css_editor_btn = null;
 
-        this.edit_mode = false;
-        this.edit_id = null;
+        this.edit_widget = null;          // store widget being edited
         this.element_margin = null;
     }
 
@@ -416,17 +416,45 @@ class ObjectGenerator {
         });
         row_counter++;
 
-        // Row 10: buttons (CSS Editor at col2, Add Object at col4)
+        // Row 10: buttons row
+        // CSS Editor for selected widget (initially hidden until edit mode)
+        this.widget_css_editor_btn = document.oc.object_generate('button', {
+            parent: this.container,
+            row: row_counter,
+            col: 1,
+            text: 'Widget CSS',
+            class_name: 'tester_button tester_button_secondary',
+            sticky: 'ew',
+            padx: margin.x,
+            pady: margin.y,
+            style: 'display: none;',
+            events: { click: () => this.open_widget_css_editor() }
+        });
+
+        // CSS Editor for preview grid
         this.css_editor_btn = document.oc.object_generate('button', {
             parent: this.container,
             row: row_counter,
             col: 2,
-            text: 'CSS Editor',
+            text: 'Preview CSS',
             class_name: 'tester_button',
             sticky: 'ew',
             padx: margin.x,
             pady: margin.y,
             events: { click: () => this.controller.open_css_editor() }
+        });
+
+        this.cancel_btn = document.oc.object_generate('button', {
+            parent: this.container,
+            row: row_counter,
+            col: 3,
+            text: 'Cancel Edit',
+            class_name: 'tester_button tester_button_secondary',
+            sticky: 'ew',
+            padx: margin.x,
+            pady: margin.y,
+            style: 'display: none;',
+            events: { click: () => this.cancel_edit() }
         });
 
         this.add_btn = document.oc.object_generate('button', {
@@ -438,7 +466,7 @@ class ObjectGenerator {
             sticky: 'ew',
             padx: margin.x,
             pady: margin.y,
-            events: { click: () => this.add_object() }
+            events: { click: () => this.add_widget() }
         });
 
         this.save_btn = document.oc.object_generate('button', {
@@ -452,18 +480,6 @@ class ObjectGenerator {
             pady: margin.y,
             style: 'display: none;',
             events: { click: () => this.save_edit() }
-        });
-        this.cancel_btn = document.oc.object_generate('button', {
-            parent: this.container,
-            row: row_counter,
-            col: 3,
-            text: 'Cancel Edit',
-            class_name: 'tester_button tester_button_secondary',
-            sticky: 'ew',
-            padx: margin.x,
-            pady: margin.y,
-            style: 'display: none;',
-            events: { click: () => this.cancel_edit() }
         });
         row_counter++;
 
@@ -482,8 +498,34 @@ class ObjectGenerator {
         for (let i = 1; i <= 4; i++) {
             document.oc.configure_column(this.container, i, { weight: 1 });
         }
+
+        // Initial population of parent dropdown
+        this.refresh_parent_options();
     }
 
+    /**
+     * Refresh the parent dropdown with current containers.
+     */
+    refresh_parent_options() {
+        let containers = this.controller.get_parent_containers();
+        this.parent_select.innerHTML = '';
+        for (let i = 0; i < containers.length; i++) {
+            let option = document.createElement('option');
+            option.value = containers[i].id;
+            option.textContent = containers[i].label;
+            this.parent_select.appendChild(option);
+        }
+        if (containers.length > 0) {
+            this.parent_select.value = this.controller.preview_grid_id;
+        }
+    }
+// #endregion
+
+// #region form_handling
+    /**
+     * Get values from the form as a params object.
+     * @returns {Object} Parameters ready for widget creation.
+     */
     get_values() {
         let sticky = '';
         if (this.sticky_n.checked) sticky += 'n';
@@ -491,60 +533,91 @@ class ObjectGenerator {
         if (this.sticky_e.checked) sticky += 'e';
         if (this.sticky_w.checked) sticky += 'w';
 
-        let parent_index = parseInt(this.parent_select.value);
-        let parent = this.controller.get_parent_container(parent_index);
-
         let params = {
             tag: this.tag_select.value,
-            parent: parent,
+            parent_id: this.parent_select.value,
             row: parseInt(this.row_input.value) || 1,
             col: parseInt(this.col_input.value) || 1,
             sticky: sticky,
-            rowSpan: parseInt(this.row_span_input.value) || undefined,
-            colSpan: parseInt(this.col_span_input.value) || undefined,
             id: this.id_input.value,
             class_name: this.class_input.value,
-            text: this.text_input.value,                    // text content
-            padx: parseInt(this.margin_x_input.value) || undefined,
-            pady: parseInt(this.margin_y_input.value) || undefined,
-            ipadx: parseInt(this.padding_x_input.value) || undefined,
-            ipady: parseInt(this.padding_y_input.value) || undefined
+            text: this.text_input.value,
         };
+
+        let row_span = parseInt(this.row_span_input.value);
+        if (!isNaN(row_span) && row_span > 0) {
+            params.row_span = row_span;
+        }
+
+        let col_span = parseInt(this.col_span_input.value);
+        if (!isNaN(col_span) && col_span > 0) {
+            params.col_span = col_span;
+        }
+
+        let padx = parseInt(this.margin_x_input.value);
+        if (!isNaN(padx)) {
+            params.padx = padx;
+        }
+
+        let pady = parseInt(this.margin_y_input.value);
+        if (!isNaN(pady)) {
+            params.pady = pady;
+        }
+
+        let ipadx = parseInt(this.padding_x_input.value);
+        if (!isNaN(ipadx)) {
+            params.ipadx = ipadx;
+        }
+
+        let ipady = parseInt(this.padding_y_input.value);
+        if (!isNaN(ipady)) {
+            params.ipady = ipady;
+        }
+
         return params;
     }
 
-    set_values(params) {
-        this.tag_select.value = params.tag;
-        let parent_idx = this.controller.get_parent_index(params.parent);
-        if (parent_idx !== -1) this.parent_select.value = parent_idx;
-        this.row_input.value = params.row || 1;
-        this.col_input.value = params.col || 1;
-        this.row_span_input.value = params.rowSpan || '';
-        this.col_span_input.value = params.colSpan || '';
-        this.id_input.value = params.id || '';
-        this.class_input.value = params.class_name || '';
-        this.text_input.value = params.text || '';           // text content
-        this.margin_x_input.value = params.padx || '';
-        this.margin_y_input.value = params.pady || '';
-        this.padding_x_input.value = params.ipadx || '';
-        this.padding_y_input.value = params.ipady || '';
-        let sticky = params.sticky || '';
+    /**
+     * Set form values from a widget.
+     * @param {Widget} widget - The widget to load.
+     */
+    set_values_from_widget(widget) {
+        this.tag_select.value = widget.tag;
+        this.parent_select.value = widget.parent_id;
+        this.row_input.value = widget.row;
+        this.col_input.value = widget.col;
+        this.row_span_input.value = widget.row_span || '';
+        this.col_span_input.value = widget.col_span || '';
+        this.id_input.value = widget.id || '';
+        this.class_input.value = widget.class_name || '';
+        this.text_input.value = widget.text || '';
+        this.margin_x_input.value = widget.padx || '';
+        this.margin_y_input.value = widget.pady || '';
+        this.padding_x_input.value = widget.ipadx || '';
+        this.padding_y_input.value = widget.ipady || '';
+
+        let sticky = widget.sticky || '';
         this.sticky_n.checked = sticky.includes('n');
         this.sticky_s.checked = sticky.includes('s');
         this.sticky_e.checked = sticky.includes('e');
         this.sticky_w.checked = sticky.includes('w');
     }
 
+    /**
+     * Clear all form fields.
+     */
     clear_form() {
         this.tag_select.value = 'button';
-        this.parent_select.selectedIndex = 0;
+        if (this.parent_select.options.length > 0) {
+            this.parent_select.value = this.controller.preview_grid_id;
+        }
         this.row_input.value = 1;
         this.col_input.value = 1;
         this.row_span_input.value = '';
         this.col_span_input.value = '';
         this.id_input.value = '';
         this.class_input.value = '';
-        this.text_input.value = '';                          // clear text
+        this.text_input.value = '';
         this.margin_x_input.value = '';
         this.margin_y_input.value = '';
         this.padding_x_input.value = '';
@@ -554,45 +627,85 @@ class ObjectGenerator {
         this.sticky_e.checked = false;
         this.sticky_w.checked = false;
     }
+// #endregion
 
-    set_edit_mode(edit_id, params) {
-        this.edit_mode = true;
-        this.edit_id = edit_id;
-        this.set_values(params);
+// #region widget_operations
+    /**
+     * Add a new widget (called by Add Object button).
+     */
+    add_widget() {
+        let params = this.get_values();
+        // Generate ID if empty
+        if (!params.id) {
+            params.id = this.controller.generate_default_id(params.tag);
+        }
+        // Default text to ID if empty
+        if (!params.text) {
+            params.text = params.id;
+        }
+        this.controller.add_widget(params);
+        this.clear_form();
+        // Refresh parent options in case a new container was added
+        this.refresh_parent_options();
+    }
+
+    /**
+     * Enter edit mode for a widget.
+     * @param {Widget} widget - The widget to edit.
+     */
+    set_edit_mode(widget) {
+        this.edit_widget = widget;
+        this.set_values_from_widget(widget);
         this.add_btn.style.display = 'none';
         this.save_btn.style.display = 'inline-flex';
         this.cancel_btn.style.display = 'inline-flex';
+        this.widget_css_editor_btn.style.display = 'inline-flex';
+        // Hide preview CSS button when editing widget? Keep visible but show both
     }
 
+    /**
+     * Save edits to the current widget.
+     */
+    save_edit() {
+        if (!this.edit_widget) {
+            return;
+        }
+        let params = this.get_values();
+        // Preserve ID if not changed
+        if (!params.id) {
+            params.id = this.edit_widget.id;
+        }
+        this.controller.update_widget(this.edit_widget.id, params);
+        this.cancel_edit();
+        this.refresh_parent_options();
+    }
+
+    /**
+     * Cancel edit mode.
+     */
     cancel_edit() {
-        this.edit_mode = false;
-        this.edit_id = null;
+        this.edit_widget = null;
         this.add_btn.style.display = 'inline-flex';
         this.save_btn.style.display = 'none';
         this.cancel_btn.style.display = 'none';
+        this.widget_css_editor_btn.style.display = 'none';
         this.clear_form();
     }
 
-    add_object() {
-        let params = this.get_values();
-        if (!params.id) {
-            params.id = this.controller.generate_id(params.tag);
-            // Default text to widget ID if not provided
-            if (!params.text) {
-                params.text = params.id;
-            }
+    /**
+     * Open CSS editor for the currently edited widget.
+     */
+    open_widget_css_editor() {
+        if (this.edit_widget && this.edit_widget.element) {
+            let callback = (css_updates) => {
+                this.edit_widget.update_css(css_updates);
+                // Also refresh code display if needed
+                if (this.controller.code_display) {
+                    this.controller.code_display.refresh(this.controller.widgets);
+                }
+            };
+            this.controller.open_css_editor_for(this.edit_widget.element, callback);
         }
-        this.controller.add_object(params);
-        this.clear_form();
     }
-
-    save_edit() {
-        let params = this.get_values();
-        if (!params.id) {
-            params.id = this.controller.generate_id(params.tag);
-        }
-        this.controller.update_object(this.edit_id, params);
-        this.cancel_edit();
-    }
-}
 // #endregion
+}

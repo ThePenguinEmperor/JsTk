@@ -11,22 +11,33 @@
     <link rel="stylesheet" href="web/css/page_elements/code_display.css">
     <link rel="stylesheet" href="web/css/page_elements/preview_grid.css">
     <link rel="stylesheet" href="web/css/page_elements/preview_css_editor.css">
-    <link rel="stylesheet" href="web/css/widgets/message_box.css">
     <link rel="stylesheet" href="web/css/widgets/css_editor_modal.css">
 </head>
 <body>
-    <script src="web/js/controller.js"></script>
     <script src="web/js/ObjectCreator.js"></script>
-
-    <script src="web/js/widgets/MessageBox.js"></script>
-    <script src="web/js/widgets/PopupOverlay.js"></script>
+    <script src="web/js/widgets/Widget.js"></script>
     <script src="web/js/widgets/CollapsibleSection.js"></script>
-
-    <script src="web/js/page_elements/CssEditor.js"></script>
+    <script src="web/js/widgets/PopupOverlay.js"></script>
+    <script src="web/js/widgets/MessageBox.js"></script>
+    <script src="web/js/page_elements/PreviewGrid.js"></script>
     <script src="web/js/page_elements/ObjectGenerator.js"></script>
     <script src="web/js/page_elements/ObjectList.js"></script>
     <script src="web/js/page_elements/CodeDisplay.js"></script>
-    <script src="web/js/page_elements/PreviewGrid.js"></script>
-    <script src="web/js/page_elements/PreviewCssEditor.js"></script>
+    <script src="web/js/page_elements/CssEditor.js"></script>
+    <script src="web/js/controller.js"></script>
+
+    <script>
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create controller instance
+            window.controller = new Controller();
+
+            // Set dev_mode to true for debugging (optional)
+            window.controller.dev_mode = true;
+
+            // Initialize the tester
+            window.controller.init();
+        });
+    </script>
 </body>
 </html>

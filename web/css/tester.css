@@ -140,8 +140,6 @@ body {
 
 /* #region right_panel_widgets */
 .tester_preview_grid {
-    min-height: 200px;
-    overflow: auto;
     background-color: var(--tester_color_bg_primary);
     border: 1px solid var(--tester_color_border);
     border-radius: 4px;
@@ -151,7 +149,6 @@ body {
 
 .tester_object_list {
     overflow-y: auto;
-    max-height: 200px;
     display: flex;
     flex-direction: column;
     gap: var(--tester_spacing_sm);
@@ -308,5 +305,48 @@ body {
 
 .tester_collapsible_content {
     padding: var(--tester_spacing_sm);
+}
+/* #endregion */
+/* #region collapsible_section_styles */
+/* Layout */
+.collapsible_section_content {
+    display: block;
+    width: 100%;
+}
+
+/* Dimensions */
+.collapsible_section_content {
+    padding: 10px;
+    margin-top: 5px;
+}
+
+/* Borders */
+.collapsible_section_content {
+    border-left: 2px solid #e0e0e0;
+}
+/* #endregion */
+
+/* #region popup_overlay_styles */
+/* Layout */
+.popup_overlay_content {
+    position: relative;
+    display: block;
+    width: 100%;
+    min-height: 100px;
+}
+
+/* Dimensions */
+.popup_overlay_content {
+    padding: 20px;
+}
+
+/* Colors */
+.popup_overlay_content {
+    background: #fff;
+}
+
+/* Borders */
+.popup_overlay_content {
+    border-radius: 4px;
 }
 /* #endregion */
