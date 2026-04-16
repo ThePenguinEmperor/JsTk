@@ -9,6 +9,7 @@ class CodeDisplay {
         this.load_btn = null;
         this.clear_btn = null;
         this.fullscreen_btn = null;
+        this.storage_key = 'jstk_last_code';   // localStorage key
     }
 
     build(parent, row, col, colSpan, sticky, margin) {
@@ -107,27 +108,25 @@ class CodeDisplay {
         for (let i = 1; i <= 5; i++) {
             document.oc.configure_column(button_row, i, { weight: 1 });
         }
+
+        // Load saved code from localStorage on initialization
+        this.load_from_storage();
     }
 // #endregion
 
 // #region code_generation
     refresh(widgets) {
         let code_lines = [];
-        code_lines.push('// Auto-generated code from JsTk Tester');
-        code_lines.push('');
-        code_lines.push('let parent_container = document.getElementById(\'tester_preview_grid\');');
-        code_lines.push('if (!parent_container) {');
-        code_lines.push('    console.error("Parent container not found");');
-        code_lines.push('}');
-        code_lines.push('');
-
         for (let widget of widgets) {
             let line = widget.get_command_string('parent_container');
             code_lines.push(line);
             code_lines.push('');
         }
-
+        if (code_lines.length > 0 && code_lines[code_lines.length - 1] === '') {
+            code_lines.pop();
+        }
         this.code_textarea.value = code_lines.join('\n');
+        this.save_to_storage();
     }
 
     update_widget_line(widget) {
@@ -145,6 +144,7 @@ class CodeDisplay {
             this.refresh(this.controller.widgets);
         } else {
             this.code_textarea.value = lines.join('\n');
+            this.save_to_storage();
         }
     }
 // #endregion
@@ -175,6 +175,8 @@ class CodeDisplay {
         if (confirmed) {
             this.controller.clear_all_widgets();
             this.show_message('All widgets cleared.', 'info');
+            // After clearing, the code textarea will be empty via refresh, so save empty
+            this.save_to_storage();
         }
     }
 
@@ -231,6 +233,7 @@ class CodeDisplay {
 
     _preprocess_command(cmd) {
         let modified = cmd.replace(/\bparent:\s*parent_container\b/g, "parent_id: 'tester_preview_grid'");
+        if (!modified.endsWith(';')) modified += ';';
         return modified;
     }
 
@@ -240,14 +243,12 @@ class CodeDisplay {
         for (let p of params_list) {
             if (p.id) id_set.add(p.id);
         }
-        let orphans = [];
         for (let p of params_list) {
             if (p.parent_id && p.parent_id !== this.controller.preview_grid_id && !id_set.has(p.parent_id)) {
-                orphans.push(p);
                 errors.push(`Widget "${p.id || '(no id)'}" has parent "${p.parent_id}" which does not exist.`);
             }
         }
-        return { valid: errors.length === 0, errors: errors, orphans: orphans };
+        return { valid: errors.length === 0, errors: errors };
     }
 
     load_from_textarea() {
@@ -270,13 +271,15 @@ class CodeDisplay {
             }
         }
         if (all_errors.length > 0) {
-            this.show_message('Validation errors:\n' + all_errors.join('\n'), 'error');
+            let error_msg = 'Validation errors:\n' + all_errors.join('\n');
+            this.show_message(error_msg, 'error', 10000);
             return;
         }
 
         let hierarchy = this._validate_hierarchy(valid_params);
         if (!hierarchy.valid) {
-            this.show_message('Hierarchy errors:\n' + hierarchy.errors.join('\n'), 'error');
+            let error_msg = 'Hierarchy errors:\n' + hierarchy.errors.join('\n');
+            this.show_message(error_msg, 'error', 10000);
             return;
         }
 
@@ -311,17 +314,27 @@ class CodeDisplay {
             this.controller.add_widget(params);
         }
 
-        this.refresh(this.controller.widgets);
+        // Keep the original commands in the textarea (but formatted)
+        let formatted_lines = [];
+        for (let cmd of commands) {
+            formatted_lines.push(cmd);
+            formatted_lines.push('');
+        }
+        if (formatted_lines.length > 0 && formatted_lines[formatted_lines.length - 1] === '') {
+            formatted_lines.pop();
+        }
+        this.code_textarea.value = formatted_lines.join('\n');
+        this.save_to_storage();
         this.show_message(`Loaded ${valid_params.length} widget(s).`, 'success');
     }
 
-    show_message(text, type = 'info') {
+    show_message(text, type = 'info', timeout = 3000) {
         console.log(`[${type.toUpperCase()}] ${text}`);
         if (window.MessageBox && this.code_textarea) {
             let msg = new MessageBox({
                 text: text,
                 type: type,
-                timeout: 3000,
+                timeout: timeout,
                 target: this.code_textarea,
                 position: 'top'
             });
@@ -330,5 +343,35 @@ class CodeDisplay {
             alert(text);
         }
     }
+
+    // #region storage
+    save_to_storage() {
+        try {
+            let code = this.code_textarea.value;
+            localStorage.setItem(this.storage_key, code);
+            if (this.controller.dev_mode) {
+                console.log('Code saved to localStorage');
+            }
+        } catch (e) {
+            console.warn('Failed to save code to localStorage:', e);
+        }
+    }
+
+    load_from_storage() {
+        try {
+            let saved_code = localStorage.getItem(this.storage_key);
+            if (saved_code) {
+                this.code_textarea.value = saved_code;
+                if (this.controller.dev_mode) {
+                    console.log('Loaded saved code from localStorage');
+                }
+                // Optionally auto-load the code to rebuild widgets
+                this.load_from_textarea();
+            }
+        } catch (e) {
+            console.warn('Failed to load code from localStorage:', e);
+        }
+    }
+    // #endregion
 // #endregion
 }

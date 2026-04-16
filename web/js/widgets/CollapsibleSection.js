@@ -50,10 +50,11 @@ class CollapsibleSection {
                 padding: 12px;
                 border-top: 1px solid #e5e7eb;
                 overflow: auto;
-                max-height: 300px;
+                max-height: 400px;
                 width: 100%;
                 box-sizing: border-box;
                 background-color: #fff;
+                min-height: 50px;
             }
             .collapsible_toggle {
                 background: none;
@@ -105,6 +106,7 @@ class CollapsibleSection {
             this.contentBuilder(this.contentDiv);
         }
 
+        // Force hidden state
         this.contentDiv.style.display = 'none';
         this.isCollapsed = true;
         this.toggleBtn.textContent = '▼';

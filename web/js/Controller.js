@@ -1,8 +1,8 @@
 // #region imports_and_setup
 class Controller {
     constructor() {
-        this.widgets = [];               // array for iteration
-        this.widgets_map = new Map();    // id -> widget instance for O(1) lookup
+        this.widgets = [];
+        this.widgets_map = new Map();
         this.next_widget_id = 1;
         this.available_tags = [
             'button', 'div', 'span', 'input', 'label', 'select', 'textarea',
@@ -12,7 +12,7 @@ class Controller {
         this.object_generator = null;
         this.object_list = null;
         this.code_display = null;
-        this.preview_grid = null;        // new PreviewGrid instance
+        this.preview_grid = null;
         this.css_editor = null;
         this.dev_mode = false;
     }
@@ -44,7 +44,7 @@ class Controller {
         document.oc.configure_column(main_container, 1, { weight: 1 });
         document.oc.configure_column(main_container, 2, { weight: 2 });
 
-        // Preview grid (inside right panel)
+        // Preview grid wrapper (with built-in CSS button)
         let preview_container = document.oc.object_generate('div', {
             parent: right_panel,
             row: 1,
@@ -56,13 +56,11 @@ class Controller {
         this.preview_grid = new PreviewGrid(this);
         this.preview_grid.build(preview_container, 1, 1, undefined, 'nsew', margin);
 
-        // Configure preview grid rows/columns
         let preview_element = this.preview_grid.get_element();
-        for (let i = 1; i <= 20; i++) {
-            document.oc.configure_row(preview_element, i, { weight: 1 });
-        }
+
+        // Configure columns only (rows auto-size)
         for (let i = 1; i <= 12; i++) {
-            document.oc.configure_column(preview_element, i, { weight: 1 });
+            document.oc.configure_column(preview_element, i, { weight: 0 });
         }
 
         // Object generator
@@ -142,11 +140,9 @@ class Controller {
             if (this.dev_mode) console.warn('Widget not found for update:', widget_id);
             return;
         }
-        // Remove old DOM element
         if (widget.element && widget.element.parentNode) {
             widget.element.parentNode.removeChild(widget.element);
         }
-        // Update properties
         if (new_params.tag) widget.tag = new_params.tag;
         if (new_params.id && new_params.id !== widget_id) {
             this.widgets_map.delete(widget_id);
@@ -167,7 +163,6 @@ class Controller {
         if (new_params.parent_id !== undefined) widget.parent_id = new_params.parent_id;
         if (new_params.css !== undefined) widget.css = new_params.css;
 
-        // Extra attributes
         let standard_keys = [
             'tag','id','class_name','text','row','col','row_span','col_span',
             'sticky','padx','pady','ipadx','ipady','parent_id','css'
@@ -177,7 +172,6 @@ class Controller {
                 widget.extra_attributes[key] = new_params[key];
             }
         }
-        // Rebuild
         let parent_element = document.getElementById(widget.parent_id);
         if (parent_element) {
             widget.build(parent_element);
@@ -268,15 +262,11 @@ class Controller {
     }
 
     refresh_all() {
-        // Rebuild preview
         if (this.preview_grid && this.preview_grid.rebuild) {
             this.preview_grid.rebuild(this.widgets);
         }
-        // Refresh object list tree
         this.refresh_object_list();
-        // Update parent dropdown
         this.update_parent_options();
-        // Refresh code display
         if (this.code_display && this.code_display.refresh) {
             this.code_display.refresh(this.widgets);
         }
@@ -286,19 +276,15 @@ class Controller {
     refresh_single_widget(widget_id) {
         let widget = this.get_widget(widget_id);
         if (!widget) return;
-        // Update preview
         if (this.preview_grid && this.preview_grid.update_widget) {
             this.preview_grid.update_widget(widget);
         }
-        // Update object list node
         if (this.object_list && this.object_list.update_widget_node) {
             this.object_list.update_widget_node(widget);
         }
-        // Update code display line
         if (this.code_display && this.code_display.update_widget_line) {
             this.code_display.update_widget_line(widget);
         }
-        // Also update parent dropdown if needed (maybe parent changed)
         this.update_parent_options();
     }
 // #endregion
@@ -331,12 +317,15 @@ class Controller {
         if (this.css_editor) this.css_editor.open(target, callback);
     }
     open_css_editor() {
-        let preview_grid = document.getElementById(this.preview_grid_id);
-        if (preview_grid && this.css_editor) {
-            this.css_editor.open(preview_grid, (updates) => {
-                if (this.dev_mode) console.log('Preview CSS updated:', updates);
-            });
-        }
+    let preview_grid = this.preview_grid.get_element();
+    if (preview_grid && this.css_editor) {
+        this.css_editor.open(preview_grid, (updates) => {
+            if (this.preview_grid) {
+                this.preview_grid.apply_css(updates);
+            }
+            if (this.dev_mode) console.log('Preview CSS updated:', updates);
+        });
     }
+}
 // #endregion
 }

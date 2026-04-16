@@ -65,17 +65,14 @@ class ObjectList {
 
     /**
      * Recursively render a widget and its children.
-     * @param {Widget} widget - The widget to render.
-     * @param {Map} children_map - Map of parent_id -> children widgets.
-     * @param {HTMLElement} parent_element - Where to append.
-     * @param {string} parent_color - CSS color of parent (for gradient).
-     * @param {number} sibling_index - Index among siblings.
-     * @param {number} total_siblings - Total siblings count.
      */
     _render_widget(widget, children_map, parent_element, parent_color = null, sibling_index = 0, total_siblings = 0) {
         let children = children_map.get(widget.id) || [];
         let is_container = widget.is_container && widget.is_container();
         let has_children = children.length > 0;
+
+        // Only container widgets with children become collapsible sections
+        let use_collapsible = (is_container && has_children);
 
         let assigned_color = this._get_widget_color(widget, parent_color, sibling_index, total_siblings);
         let gradient_style = '';
@@ -91,7 +88,8 @@ class ObjectList {
         let color_index = this._get_color_index(assigned_color);
         let text_color = this.text_color_palette[color_index % this.text_color_palette.length];
 
-        if (is_container) {
+        if (use_collapsible) {
+            // Create collapsible section
             let section = new CollapsibleSection(
                 `${widget.tag} (${widget.id}) - row ${widget.row}, col ${widget.col}`,
                 (content_container) => {
@@ -114,10 +112,41 @@ class ObjectList {
             let header = section.container.querySelector('.collapsible_header');
             if (header) {
                 header.style.cssText = gradient_style + ` color: ${text_color};`;
+                // Add Edit and Delete buttons to the header
+                let actions_div = document.createElement('div');
+                actions_div.className = 'tester_object_actions';
+                actions_div.style.marginLeft = 'auto';
+                actions_div.style.display = 'flex';
+                actions_div.style.gap = '8px';
+
+                let edit_btn = document.createElement('button');
+                edit_btn.textContent = 'Edit';
+                edit_btn.className = 'tester_button tester_button_secondary';
+                edit_btn.style.padding = '2px 6px';
+                edit_btn.style.fontSize = '12px';
+                edit_btn.onclick = (e) => {
+                    e.stopPropagation();
+                    this.controller.object_generator.set_edit_mode(widget);
+                };
+
+                let del_btn = document.createElement('button');
+                del_btn.textContent = 'Delete';
+                del_btn.className = 'tester_button tester_button_danger';
+                del_btn.style.padding = '2px 6px';
+                del_btn.style.fontSize = '12px';
+                del_btn.onclick = (e) => {
+                    e.stopPropagation();
+                    this._confirm_delete(widget, children_map);
+                };
+
+                actions_div.appendChild(edit_btn);
+                actions_div.appendChild(del_btn);
+                header.appendChild(actions_div);
             }
             this.item_map.set(widget.id, section.container);
             this.collapsible_map.set(widget.id, section);
         } else {
+            // Leaf widget (simple div)
             let item = document.createElement('div');
             item.className = 'tester_object_item';
             item.style.cssText = gradient_style + ` color: ${text_color};`;
@@ -148,6 +177,7 @@ class ObjectList {
             parent_element.appendChild(item);
             this.item_map.set(widget.id, item);
 
+            // If this widget has children (shouldn't happen for non-container, but just in case), render them as nested
             if (has_children) {
                 let child_container = document.createElement('div');
                 child_container.className = 'object_list_child_container';
@@ -267,38 +297,22 @@ class ObjectList {
         this.controller.delete_widget(widget.id);
     }
 
-    /**
-     * Refresh the entire tree (public alias).
-     */
     refresh_tree() {
         this.refresh(this.controller.widgets);
     }
 
-    /**
-     * Update a single widget's representation in the tree.
-     * If the widget's parent changed, falls back to full refresh.
-     * @param {Widget} widget - The widget to update.
-     */
     update_widget_node(widget) {
-        // If parent changed, we need to rebuild the whole tree
-        let old_parent_id = null;
-        // We can't easily know old parent without storing it; we'll compare current parent_id
-        // But we don't store old parent. To be safe, if parent might have changed, we do full refresh.
-        // For simplicity, we check if the widget's parent is still the same as the one in the tree?
-        // Without stored state, easiest is: if we can't find the widget in the current tree using its id, do full refresh.
         let existing_node = this.item_map.get(widget.id) || this.collapsible_map.get(widget.id);
         if (!existing_node) {
-            // Not found, likely parent changed or new widget – full refresh
             this.refresh_tree();
             return;
         }
 
-        // Update label text and colors (for non-structural changes)
+        // Update label text
         let info_span = existing_node.querySelector('.tester_object_info');
         if (info_span) {
             info_span.textContent = `${widget.tag} (${widget.id}) - row ${widget.row}, col ${widget.col}`;
         } else {
-            // It's a collapsible section – update its title
             let section = this.collapsible_map.get(widget.id);
             if (section) {
                 let title_span = section.container.querySelector('.collapsible_title');
@@ -306,47 +320,13 @@ class ObjectList {
                     title_span.textContent = `${widget.tag} (${widget.id}) - row ${widget.row}, col ${widget.col}`;
                 }
             } else {
-                // Fallback to full refresh
                 this.refresh_tree();
                 return;
             }
         }
 
-        // Update color/gradient (requires recomputing color based on new parent and siblings)
-        // For simplicity, we will just full refresh if color needs to change.
-        // But to be efficient, we can recalc color and apply new background.
-        // We'll do a partial update of the background.
-        let parent_widget = this.controller.get_widget(widget.parent_id);
-        let parent_color = null;
-        let sibling_index = 0;
-        let total_siblings = 0;
-        if (parent_widget) {
-            let siblings = this.controller.widgets.filter(w => w.parent_id === widget.parent_id);
-            total_siblings = siblings.length;
-            sibling_index = siblings.findIndex(w => w.id === widget.id);
-            parent_color = this._get_widget_color(parent_widget, null, 0, 1); // approximate
-        }
-        let assigned_color = this._get_widget_color(widget, parent_color, sibling_index, total_siblings);
-        let gradient_style = '';
-        if (parent_color && total_siblings > 1) {
-            gradient_style = `background: linear-gradient(to right, ${parent_color}, ${assigned_color});`;
-        } else if (total_siblings === 1 && parent_color) {
-            assigned_color = parent_color;
-            gradient_style = `background: ${assigned_color};`;
-        } else {
-            gradient_style = `background: ${assigned_color};`;
-        }
-        let color_index = this._get_color_index(assigned_color);
-        let text_color = this.text_color_palette[color_index % this.text_color_palette.length];
-        if (info_span) {
-            existing_node.style.cssText = gradient_style + ` color: ${text_color};`;
-        } else if (this.collapsible_map.has(widget.id)) {
-            let section = this.collapsible_map.get(widget.id);
-            let header = section.container.querySelector('.collapsible_header');
-            if (header) {
-                header.style.cssText = gradient_style + ` color: ${text_color};`;
-            }
-        }
+        // For simplicity, do a full refresh when color might need to change
+        this.refresh_tree();
     }
 }
 // #endregion

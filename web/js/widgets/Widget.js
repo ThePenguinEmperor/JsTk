@@ -193,26 +193,24 @@ class Widget {
         let self = this;
         let content_container_div = null;
 
-        let section = new CollapsibleSection({
-            id: this.id,
-            title: this.text || 'Section',
-            content_builder: function(container) {
+        let section = new CollapsibleSection(
+            this.text || 'Section',
+            function(container) {
                 content_container_div = document.createElement('div');
                 content_container_div.id = self.id + '_content';
                 content_container_div.className = 'collapsible_section_content';
                 container.appendChild(content_container_div);
                 return content_container_div;
             },
-            default_open: true
-        });
-
-        this.element = section.render();
+            {
+                id: this.id,
+                class_name: 'collapsible_section_widget',
+                margin: { x: 0, y: 0 }
+            }
+        );
+        section.build(parent_element);
+        this.element = section.container;
         this.content_container = content_container_div;
-        parent_element.appendChild(this.element);
-
-        if (Object.keys(this.css).length > 0) {
-            Object.assign(this.element.style, this.css);
-        }
         return this.element;
     }
 
@@ -237,18 +235,18 @@ class Widget {
         let self = this;
         let content_container_div = null;
 
-        let overlay = new PopupOverlay({
-            title: this.text || 'Popup',
-            content_builder: function(container) {
+        let overlay = new PopupOverlay(
+            function(container) {
                 content_container_div = document.createElement('div');
                 content_container_div.id = self.id + '_content';
                 content_container_div.className = 'popup_overlay_content';
                 container.appendChild(content_container_div);
                 return content_container_div;
-            }
-        });
-
-        this.element = overlay.render();
+            },
+            function() {}
+        );
+        overlay.open();
+        this.element = overlay.element;
         this.content_container = content_container_div;
         parent_element.appendChild(this.element);
         this.element.style.display = 'none';
@@ -277,19 +275,15 @@ class Widget {
             return fallback;
         }
 
-        let message_box = new MessageBox({
+        let msg = new MessageBox({
             text: this.text || 'Message',
-            duration: 3000,
-            type: 'info'
+            type: 'info',
+            timeout: 3000
         });
-
-        this.element = message_box.render();
+        msg.show();
+        this.element = msg.element;
         this.content_container = this.element;
         parent_element.appendChild(this.element);
-
-        if (Object.keys(this.css).length > 0) {
-            Object.assign(this.element.style, this.css);
-        }
         return this.element;
     }
     // #endregion dom_building

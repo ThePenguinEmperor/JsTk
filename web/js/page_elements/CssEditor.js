@@ -1,12 +1,15 @@
-// #region constructor_and_build
+// #region constructor_and_helpers
 class CssEditor {
     constructor(controller) {
         this.controller = controller;
         this.popup = null;
         this.target_element = null;
+        this.live_preview_element = null;
         this.save_callback = null;
-        this.css_inputs = {};
+        this.css_inputs = new Map();   // prop_name -> { input, unit_select, row_element }
         this.custom_css_textarea = null;
+        this.section_headers = {};
+        this.property_groups = null;
     }
 
     /**
@@ -18,15 +21,21 @@ class CssEditor {
         this.target_element = target_element;
         this.save_callback = on_save;
 
-        // Create popup if it doesn't exist
+        // Create a live preview clone
+        this.live_preview_element = target_element.cloneNode(true);
+        this.live_preview_element.id = 'css_live_preview';
+        this.live_preview_element.style.position = 'relative';
+        this.live_preview_element.style.margin = '10px 0';
+        this.live_preview_element.style.padding = '10px';
+        this.live_preview_element.style.border = '2px solid #ccc';
+        this.live_preview_element.style.backgroundColor = '#f9f9f9';
+
         if (!this.popup) {
             this.create_popup();
         }
 
-        // Load current styles into the form
         this.load_current_styles();
-
-        this.popup.show();
+        this.popup.open();
     }
 
     /**
@@ -34,78 +43,61 @@ class CssEditor {
      */
     create_popup() {
         let self = this;
-
-        this.popup = new PopupOverlay({
-            title: 'CSS Editor',
-            content_builder: function(container) {
+        this.popup = new PopupOverlay(
+            function(container) {
                 self.build_editor_content(container);
             },
-            on_close: function() {
+            function() {
                 self.target_element = null;
+                self.live_preview_element = null;
                 self.save_callback = null;
             }
-        });
+        );
     }
 // #endregion
 
 // #region editor_content
-    /**
-     * Build the CSS editor content inside the popup.
-     * @param {HTMLElement} container - The container to build content in.
-     */
     build_editor_content(container) {
-        // Create scrollable content area
+        let title = document.createElement('h3');
+        title.textContent = 'CSS Editor';
+        title.style.marginBottom = '10px';
+        container.appendChild(title);
+
+        let preview_label = document.createElement('div');
+        preview_label.textContent = 'Live Preview (clone of target):';
+        preview_label.style.fontWeight = 'bold';
+        preview_label.style.marginTop = '10px';
+        container.appendChild(preview_label);
+        container.appendChild(this.live_preview_element);
+
         let content = document.createElement('div');
-        content.className = 'css_editor_content';
+        content.style.maxHeight = '500px';
+        content.style.overflowY = 'auto';
+        content.style.marginTop = '10px';
 
-        // Collapsible sections for CSS property groups
-        this.build_collapsible_section(content, 'Layout', [
-            'display', 'position', 'flex_direction', 'justify_content', 'align_items',
-            'grid_template_columns', 'grid_template_rows', 'gap', 'flex_wrap'
-        ]);
+        this.property_groups = this.get_property_groups();
+        for (let group_name in this.property_groups) {
+            this.build_collapsible_section(content, group_name, this.property_groups[group_name]);
+        }
 
-        this.build_collapsible_section(content, 'Dimensions', [
-            'width', 'height', 'min_width', 'min_height', 'max_width', 'max_height',
-            'margin', 'margin_top', 'margin_right', 'margin_bottom', 'margin_left',
-            'padding', 'padding_top', 'padding_right', 'padding_bottom', 'padding_left',
-            'box_sizing'
-        ]);
+        let custom_section = document.createElement('div');
+        custom_section.style.marginTop = '20px';
+        custom_section.style.borderTop = '1px solid #ccc';
+        custom_section.style.paddingTop = '10px';
+        let custom_label = document.createElement('div');
+        custom_label.textContent = 'Custom CSS (raw)';
+        custom_label.style.fontWeight = 'bold';
+        custom_section.appendChild(custom_label);
 
-        this.build_collapsible_section(content, 'Colors', [
-            'background_color', 'color', 'opacity'
-        ]);
+        this.custom_css_textarea = document.createElement('textarea');
+        this.custom_css_textarea.style.width = '100%';
+        this.custom_css_textarea.style.height = '100px';
+        this.custom_css_textarea.style.fontFamily = 'monospace';
+        this.custom_css_textarea.style.fontSize = '12px';
+        custom_section.appendChild(this.custom_css_textarea);
+        content.appendChild(custom_section);
 
-        this.build_collapsible_section(content, 'Borders', [
-            'border', 'border_width', 'border_style', 'border_color', 'border_radius',
-            'border_top', 'border_right', 'border_bottom', 'border_left', 'outline'
-        ]);
-
-        this.build_collapsible_section(content, 'Typography', [
-            'font_family', 'font_size', 'font_weight', 'font_style', 'line_height',
-            'text_align', 'text_decoration', 'text_transform', 'letter_spacing', 'word_spacing'
-        ]);
-
-        this.build_collapsible_section(content, 'Effects', [
-            'transition', 'animation', 'box_shadow', 'text_shadow', 'filter', 'transform'
-        ]);
-
-        this.build_collapsible_section(content, 'Z-index', [
-            'z_index'
-        ]);
-
-        // Custom CSS section
-        let custom_section = new CollapsibleSection({
-            title: 'Custom CSS',
-            content_builder: function(custom_container) {
-                self.build_custom_css_section(custom_container);
-            },
-            default_open: false
-        });
-        content.appendChild(custom_section.render());
-
-        // Buttons row
         let button_row = document.createElement('div');
-        button_row.className = 'css_editor_buttons';
         button_row.style.marginTop = '20px';
         button_row.style.display = 'flex';
         button_row.style.gap = '10px';
@@ -119,7 +111,7 @@ class CssEditor {
         let cancel_btn = document.createElement('button');
         cancel_btn.textContent = 'Cancel';
         cancel_btn.className = 'tester_button tester_button_secondary';
-        cancel_btn.onclick = () => this.popup.hide();
+        cancel_btn.onclick = () => this.popup.close();
 
         button_row.appendChild(apply_btn);
         button_row.appendChild(cancel_btn);
@@ -128,211 +120,354 @@ class CssEditor {
         container.appendChild(content);
     }
 
-    /**
-     * Build a collapsible section for CSS property group.
-     * @param {HTMLElement} parent - Parent element.
-     * @param {string} title - Section title.
-     * @param {Array} properties - Array of property names.
-     */
-    build_collapsible_section(parent, title, properties) {
-        let self = this;
-        let section = new CollapsibleSection({
-            title: title,
-            content_builder: function(container) {
-                self.build_property_grid(container, properties);
+    get_property_groups() {
+        return {
+            'Layout': {
+                'display': { type: 'select', options: ['', 'block', 'inline', 'inline-block', 'flex', 'inline-flex', 'grid', 'inline-grid', 'none'] },
+                'position': { type: 'select', options: ['', 'static', 'relative', 'absolute', 'fixed', 'sticky'] },
+                'flex-direction': { type: 'select', options: ['', 'row', 'row-reverse', 'column', 'column-reverse'] },
+                'justify-content': { type: 'select', options: ['', 'flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'] },
+                'align-items': { type: 'select', options: ['', 'stretch', 'flex-start', 'flex-end', 'center', 'baseline'] },
+                'flex-wrap': { type: 'select', options: ['', 'nowrap', 'wrap', 'wrap-reverse'] },
+                'grid-template-columns': { type: 'text' },
+                'grid-template-rows': { type: 'text' },
+                'gap': { type: 'number', unit: 'px' }
             },
-            default_open: true
-        });
-        parent.appendChild(section.render());
+            'Dimensions': {
+                'width': { type: 'number', unit: 'px' },
+                'height': { type: 'number', unit: 'px' },
+                'min-width': { type: 'number', unit: 'px' },
+                'min-height': { type: 'number', unit: 'px' },
+                'max-width': { type: 'number', unit: 'px' },
+                'max-height': { type: 'number', unit: 'px' },
+                'margin': { type: 'number', unit: 'px' },
+                'margin-top': { type: 'number', unit: 'px' },
+                'margin-right': { type: 'number', unit: 'px' },
+                'margin-bottom': { type: 'number', unit: 'px' },
+                'margin-left': { type: 'number', unit: 'px' },
+                'padding': { type: 'number', unit: 'px' },
+                'padding-top': { type: 'number', unit: 'px' },
+                'padding-right': { type: 'number', unit: 'px' },
+                'padding-bottom': { type: 'number', unit: 'px' },
+                'padding-left': { type: 'number', unit: 'px' },
+                'box-sizing': { type: 'select', options: ['', 'content-box', 'border-box'] }
+            },
+            'Colors': {
+                'background-color': { type: 'color' },
+                'color': { type: 'color' },
+                'opacity': { type: 'number', unit: '', min: 0, max: 1, step: 0.1 }
+            },
+            'Borders': {
+                'border': { type: 'text' },
+                'border-width': { type: 'number', unit: 'px' },
+                'border-style': { type: 'select', options: ['', 'solid', 'dashed', 'dotted', 'double', 'groove', 'ridge', 'inset', 'outset', 'none'] },
+                'border-color': { type: 'color' },
+                'border-radius': { type: 'number', unit: 'px' },
+                'outline': { type: 'text' }
+            },
+            'Typography': {
+                'font-family': { type: 'select', options: ['', 'Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Verdana', 'Georgia', 'sans-serif', 'serif', 'monospace'] },
+                'font-size': { type: 'number', unit: 'px' },
+                'font-weight': { type: 'select', options: ['', 'normal', 'bold', '100', '200', '300', '400', '500', '600', '700', '800', '900'] },
+                'font-style': { type: 'select', options: ['', 'normal', 'italic', 'oblique'] },
+                'line-height': { type: 'number', unit: '' },
+                'text-align': { type: 'select', options: ['', 'left', 'right', 'center', 'justify'] },
+                'text-decoration': { type: 'select', options: ['', 'none', 'underline', 'overline', 'line-through'] },
+                'letter-spacing': { type: 'number', unit: 'px' }
+            },
+            'Effects': {
+                'transition': { type: 'text' },
+                'animation': { type: 'text' },
+                'box-shadow': { type: 'text' },
+                'text-shadow': { type: 'text' },
+                'filter': { type: 'text' },
+                'transform': { type: 'text' },
+                'cursor': { type: 'select', options: ['', 'auto', 'pointer', 'default', 'move', 'wait', 'help', 'crosshair', 'text'] }
+            },
+            'Z-index': {
+                'z-index': { type: 'number', unit: '' }
+            }
+        };
     }
 
-    /**
-     * Build a grid of property inputs.
-     * @param {HTMLElement} container - Container for the grid.
-     * @param {Array} properties - Array of property names.
-     */
-    build_property_grid(container, properties) {
-        let grid = document.createElement('div');
-        grid.className = 'css_property_grid';
-        grid.style.display = 'grid';
-        grid.style.gridTemplateColumns = '1fr 2fr';
-        grid.style.gap = '8px';
-        grid.style.padding = '10px';
+    build_collapsible_section(parent, title, properties) {
+        let section = document.createElement('div');
+        section.style.marginBottom = '10px';
+        section.style.border = '1px solid #ddd';
+        section.style.borderRadius = '4px';
 
-        for (let i = 0; i < properties.length; i++) {
-            let prop_name = properties[i];
-            let display_name = prop_name.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+        let header = document.createElement('div');
+        header.style.backgroundColor = '#f0f0f0';
+        header.style.padding = '8px';
+        header.style.cursor = 'pointer';
+        header.style.display = 'flex';
+        header.style.alignItems = 'center';
+        header.style.gap = '8px';
 
-            let label = document.createElement('label');
-            label.textContent = display_name + ':';
-            label.style.fontSize = '12px';
-            label.style.fontWeight = 'bold';
+        let icon = document.createElement('span');
+        icon.textContent = '▶';
+        icon.style.fontSize = '12px';
+        icon.style.transition = 'transform 0.2s';
 
-            let input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'tester_input_small';
-            input.placeholder = prop_name;
-            input.setAttribute('data_property', prop_name);
+        let title_span = document.createElement('span');
+        title_span.textContent = title;
+        title_span.style.fontWeight = 'bold';
 
-            // Store reference for later
-            if (!this.css_inputs[prop_name]) {
-                this.css_inputs[prop_name] = [];
-            }
-            this.css_inputs[prop_name].push(input);
+        let indicator = document.createElement('span');
+        indicator.style.marginLeft = 'auto';
+        indicator.style.fontSize = '12px';
+        indicator.style.color = 'green';
+        indicator.style.display = 'none';
+        indicator.innerHTML = '●';
+        indicator.title = 'Active CSS in this section';
 
-            grid.appendChild(label);
-            grid.appendChild(input);
+        header.appendChild(icon);
+        header.appendChild(title_span);
+        header.appendChild(indicator);
+
+        let content = document.createElement('div');
+        content.style.padding = '10px';
+        content.style.display = 'none';
+        content.style.borderTop = '1px solid #ddd';
+
+        for (let prop_name in properties) {
+            let prop_def = properties[prop_name];
+            let row = this.build_property_row(prop_name, prop_def);
+            content.appendChild(row);
         }
 
-        container.appendChild(grid);
+        header.onclick = () => {
+            let is_open = content.style.display !== 'none';
+            content.style.display = is_open ? 'none' : 'block';
+            icon.textContent = is_open ? '▶' : '▼';
+        };
+
+        section.appendChild(header);
+        section.appendChild(content);
+        parent.appendChild(section);
+
+        this.section_headers[title] = { indicator, properties: Object.keys(properties) };
     }
 
-    /**
-     * Build the custom CSS textarea section.
-     * @param {HTMLElement} container - Container for custom CSS.
-     */
-    build_custom_css_section(container) {
-        let textarea = document.createElement('textarea');
-        textarea.className = 'tester_code_area';
-        textarea.placeholder = 'Enter custom CSS properties here (e.g.,\nbackground: #f0f0f0;\nbox-shadow: 0 2px 4px rgba(0,0,0,0.1);)';
-        textarea.style.width = '100%';
-        textarea.style.height = '150px';
-        textarea.style.fontFamily = 'monospace';
-        textarea.style.fontSize = '12px';
+    build_property_row(prop_name, def) {
+        let row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '8px';
+        row.style.marginBottom = '8px';
 
-        this.custom_css_textarea = textarea;
+        let label = document.createElement('label');
+        label.textContent = prop_name + ':';
+        label.style.width = '120px';
+        label.style.fontSize = '12px';
 
-        container.appendChild(textarea);
+        let input_wrapper = document.createElement('div');
+        input_wrapper.style.display = 'flex';
+        input_wrapper.style.gap = '4px';
+        input_wrapper.style.flex = '1';
+
+        let input = null;
+        let unit_select = null;
+
+        if (def.type === 'select') {
+            input = document.createElement('select');
+            input.style.flex = '1';
+            let blank_option = document.createElement('option');
+            blank_option.value = '';
+            blank_option.textContent = '(none)';
+            input.appendChild(blank_option);
+            for (let opt of def.options) {
+                let option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                input.appendChild(option);
+            }
+            let clear_btn = document.createElement('button');
+            clear_btn.textContent = '✕';
+            clear_btn.style.padding = '2px 6px';
+            clear_btn.style.fontSize = '12px';
+            clear_btn.style.cursor = 'pointer';
+            clear_btn.onclick = () => { input.value = ''; this.update_live_preview(prop_name, ''); };
+            input_wrapper.appendChild(input);
+            input_wrapper.appendChild(clear_btn);
+        } else if (def.type === 'color') {
+            input = document.createElement('input');
+            input.type = 'color';
+            input.style.width = '60px';
+            input_wrapper.appendChild(input);
+        } else if (def.type === 'number') {
+            input = document.createElement('input');
+            input.type = 'number';
+            input.style.width = '80px';
+            if (def.min !== undefined) input.min = def.min;
+            if (def.max !== undefined) input.max = def.max;
+            if (def.step !== undefined) input.step = def.step;
+            input_wrapper.appendChild(input);
+            if (def.unit !== undefined && def.unit !== '') {
+                unit_select = document.createElement('select');
+                let units = ['px', '%', 'em', 'rem', 'vw', 'vh'];
+                for (let u of units) {
+                    let opt = document.createElement('option');
+                    opt.value = u;
+                    opt.textContent = u;
+                    if (u === def.unit) opt.selected = true;
+                    unit_select.appendChild(opt);
+                }
+                input_wrapper.appendChild(unit_select);
+            }
+        } else {
+            input = document.createElement('input');
+            input.type = 'text';
+            input.style.flex = '1';
+            input_wrapper.appendChild(input);
+            if (def.unit) {
+                let unit_hint = document.createElement('span');
+                unit_hint.textContent = def.unit;
+                unit_hint.style.fontSize = '12px';
+                unit_hint.style.color = '#666';
+                input_wrapper.appendChild(unit_hint);
+            }
+        }
+
+        row.appendChild(label);
+        row.appendChild(input_wrapper);
+
+        // Store reference
+        this.css_inputs.set(prop_name, { input: input, unit_select: unit_select });
+
+        let update_func = () => {
+            let value = input.value;
+            if (unit_select && value !== '') value += unit_select.value;
+            this.update_live_preview(prop_name, value);
+            this.update_section_indicator();
+        };
+        input.addEventListener('change', update_func);
+        input.addEventListener('input', update_func);
+        if (unit_select) unit_select.addEventListener('change', update_func);
+
+        return row;
+    }
+
+    update_live_preview(prop, value) {
+        if (this.live_preview_element) {
+            if (value === '') {
+                this.live_preview_element.style[this.camelize(prop)] = '';
+            } else {
+                this.live_preview_element.style[this.camelize(prop)] = value;
+            }
+        }
+    }
+
+    update_section_indicator() {
+        for (let section_name in this.section_headers) {
+            let section = this.section_headers[section_name];
+            let has_active = false;
+            for (let prop of section.properties) {
+                let entry = this.css_inputs.get(prop);
+                if (entry && entry.input && entry.input.value !== '') {
+                    has_active = true;
+                    break;
+                }
+            }
+            section.indicator.style.display = has_active ? 'inline' : 'none';
+        }
+    }
+
+    camelize(str) {
+        return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
     }
 // #endregion
 
 // #region style_management
-    /**
-     * Load current styles from target element into the form.
-     */
     load_current_styles() {
-        if (!this.target_element) {
-            return;
-        }
-
-        let computed_style = window.getComputedStyle(this.target_element);
-
-        // Load values into input fields
-        for (let prop_name in this.css_inputs) {
-            let inputs = this.css_inputs[prop_name];
-            let css_property = prop_name.replace(/_/g, '-');
-            let current_value = computed_style.getPropertyValue(css_property);
-
-            for (let i = 0; i < inputs.length; i++) {
-                inputs[i].value = current_value || '';
+        if (!this.target_element) return;
+        let computed = window.getComputedStyle(this.target_element);
+        for (let [prop, entry] of this.css_inputs.entries()) {
+            let input = entry.input;
+            let unit_select = entry.unit_select;
+            if (!input) continue;
+            let value = computed.getPropertyValue(prop);
+            if (value) {
+                let match = value.match(/^([\d.-]+)(.*)$/);
+                if (match && unit_select) {
+                    input.value = match[1];
+                    let unit = match[2].trim();
+                    if (unit_select.querySelector(`option[value="${unit}"]`)) {
+                        unit_select.value = unit;
+                    }
+                } else if (input.type === 'color') {
+                    let rgb = value.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+                    if (rgb) {
+                        let hex = '#' + ((1 << 24) + (parseInt(rgb[1]) << 16) + (parseInt(rgb[2]) << 8) + parseInt(rgb[3])).toString(16).slice(1);
+                        input.value = hex;
+                    } else {
+                        input.value = value;
+                    }
+                } else {
+                    input.value = value;
+                }
             }
         }
-
-        // Load inline styles into custom textarea
-        let inline_style = this.target_element.getAttribute('style') || '';
         if (this.custom_css_textarea) {
+            let inline_style = this.target_element.getAttribute('style') || '';
             this.custom_css_textarea.value = inline_style;
         }
+        if (this.live_preview_element) {
+            this.live_preview_element.style.cssText = this.target_element.style.cssText;
+        }
+        this.update_section_indicator();
     }
 
-    /**
-     * Collect all CSS changes from the form.
-     * @returns {Object} CSS updates object.
-     */
     collect_css_updates() {
         let updates = {};
-
-        // Collect from property inputs
-        for (let prop_name in this.css_inputs) {
-            let inputs = this.css_inputs[prop_name];
-            if (inputs.length > 0) {
-                let value = inputs[0].value;
-                if (value && value.trim() !== '') {
-                    let css_property = prop_name.replace(/_/g, '-');
-                    updates[css_property] = value.trim();
-                }
+        for (let [prop, entry] of this.css_inputs.entries()) {
+            let input = entry.input;
+            let unit_select = entry.unit_select;
+            if (!input) continue;
+            let value = input.value;
+            if (value !== '') {
+                if (unit_select) value += unit_select.value;
+                updates[prop] = value;
             }
         }
-
-        // Parse custom CSS textarea
-        if (this.custom_css_textarea && this.custom_css_textarea.value.trim() !== '') {
-            let custom_css = this.custom_css_textarea.value;
-            let lines = custom_css.split('\n');
-            for (let i = 0; i < lines.length; i++) {
-                let line = lines[i].trim();
+        if (this.custom_css_textarea && this.custom_css_textarea.value.trim()) {
+            let lines = this.custom_css_textarea.value.split('\n');
+            for (let line of lines) {
+                line = line.trim();
                 if (line && line.indexOf(':') !== -1) {
                     let parts = line.split(':');
-                    let property = parts[0].trim();
-                    let value = parts.slice(1).join(':').trim().replace(/;$/, '');
-                    if (property && value) {
-                        updates[property] = value;
-                    }
+                    let prop = parts[0].trim();
+                    let val = parts.slice(1).join(':').trim().replace(/;$/, '');
+                    if (prop && val) updates[prop] = val;
                 }
             }
         }
-
         return updates;
     }
 
-    /**
-     * Apply CSS changes to the target element.
-     */
     apply_changes() {
         if (!this.target_element) {
-            this.popup.hide();
+            this.popup.close();
             return;
         }
-
         let updates = this.collect_css_updates();
-
-        if (Object.keys(updates).length === 0) {
-            this.popup.hide();
-            return;
+        for (let prop in updates) {
+            this.target_element.style[this.camelize(prop)] = updates[prop];
         }
-
-        // Apply to element
-        for (let property in updates) {
-            this.target_element.style[this.camelize(property)] = updates[property];
-        }
-
-        // Call the save callback if provided
         if (this.save_callback) {
             this.save_callback(updates);
         }
-
-        this.show_success_message('CSS applied successfully!');
-        this.popup.hide();
+        this.show_message('CSS applied!', 'success');
+        this.popup.close();
     }
 
-    /**
-     * Convert CSS property name to camelCase for JavaScript style access.
-     * @param {string} css_property - CSS property name (e.g., 'background-color').
-     * @returns {string} CamelCase version (e.g., 'backgroundColor').
-     */
-    camelize(css_property) {
-        let parts = css_property.split('-');
-        let result = parts[0];
-        for (let i = 1; i < parts.length; i++) {
-            result += parts[i].charAt(0).toUpperCase() + parts[i].slice(1);
-        }
-        return result;
-    }
-
-    /**
-     * Show a temporary success message.
-     * @param {string} message - Message to show.
-     */
-    show_success_message(message) {
+    show_message(text, type) {
         if (window.MessageBox) {
-            let msg_box = new window.MessageBox({
-                text: message,
-                duration: 1500,
-                type: 'success'
-            });
-            msg_box.render();
+            let msg = new MessageBox({ text: text, type: type, timeout: 2000 });
+            msg.show();
+        } else {
+            alert(text);
         }
     }
 // #endregion
 }
-
-window.CssEditor = CssEditor;
