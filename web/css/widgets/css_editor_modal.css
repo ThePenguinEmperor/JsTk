@@ -1,0 +1,79 @@
+/* #region css_editor_modal */
+/* Popup Overlay - already defined elsewhere, but we ensure its scroll panel styles */
+.popup_scroll_panel {
+    overflow: auto;
+    background: var(--tester_color_bg_secondary, #fff);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Main content container for CSS editor – fixed size, no overflow */
+.css_editor_content {
+    width: 700px;
+    height: 1200px;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: visible;           /* no internal scroll */
+}
+
+/* Collapsible sections – no overflow */
+.css_collapsible_header {
+    cursor: pointer;
+    padding: 8px;
+    background-color: var(--tester_color_bg_tertiary, #f1f1f1);
+    margin-top: 8px;
+    user-select: none;
+    font-weight: bold;
+    border-radius: 4px;
+}
+.css_collapsible_content {
+    overflow: visible;
+    display: block;
+    padding-left: 8px;
+}
+
+/* Property grid – responsive, no overflow */
+.css_property_grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: visible;
+}
+.css_property_grid label {
+    font-size: 12px;
+    font-weight: bold;
+}
+.css_property_grid input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4px 6px;
+    border: 1px solid var(--tester_color_border, #ccc);
+    border-radius: 4px;
+}
+
+/* Custom CSS textarea – let it grow, but no internal scroll (overflow visible) */
+.css_custom_textarea {
+    width: 100%;
+    min-height: 150px;
+    font-family: monospace;
+    font-size: 12px;
+    resize: vertical;
+    overflow: visible;
+    border: 1px solid var(--tester_color_border, #ccc);
+    border-radius: 4px;
+    padding: 6px;
+    box-sizing: border-box;
+}
+
+/* Buttons row */
+.css_editor_buttons {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+/* #endregion css_editor_modal */
