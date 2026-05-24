@@ -1,6 +1,12 @@
 // #region popup_overlay
+/**
+ * PopupOverlay – a self‑contained modal overlay with scrollable content.
+ * @param {Function} content_builder – function(container) to populate the popup.
+ * @param {Object} [options] – { width, height, min_width, min_height, max_width, max_height }
+ * @param {Function} [on_close] – called when popup is closed.
+ */
 class PopupOverlay {
-    constructor(content_builder, on_close = null) {
+    constructor(content_builder, options = {}, on_close = null) {
         this.content_builder = content_builder;
         this.on_close = on_close;
         this.element = null;
@@ -8,6 +14,61 @@ class PopupOverlay {
         this.scroll_panel = null;
         this.content_container = null;
         this.close_btn = null;
+
+        // Default limits (percentages)
+        this.default_max_width = '90%';
+        this.default_max_height = '85%';
+
+        // Process user options: treat width/height as min sizes if valid
+        let min_width = null;
+        let min_height = null;
+        let max_width = this.default_max_width;
+        let max_height = this.default_max_height;
+
+        // Helper to convert percentage to pixels relative to viewport
+        const percent_to_px = (percent_str, is_width) => {
+            const percent = parseFloat(percent_str);
+            if (isNaN(percent)) return null;
+            const viewport_size = is_width ? window.innerWidth : window.innerHeight;
+            return (percent / 100) * viewport_size;
+        };
+
+        // Check if user provided width/height and if they exceed limits
+        if (options.width) {
+            const user_width_px = parseFloat(options.width);
+            if (!isNaN(user_width_px)) {
+                const limit_px = percent_to_px(this.default_max_width, true);
+                if (user_width_px <= limit_px) {
+                    min_width = `${user_width_px}px`;
+                }
+                // else ignore – limit will apply
+            } else {
+                // if width is something like 'auto', use as is? not typical – ignore.
+            }
+        }
+        if (options.height) {
+            const user_height_px = parseFloat(options.height);
+            if (!isNaN(user_height_px)) {
+                const limit_px = percent_to_px(this.default_max_height, false);
+                if (user_height_px <= limit_px) {
+                    min_height = `${user_height_px}px`;
+                }
+            }
+        }
+
+        // Override max if user provided
+        if (options.max_width) max_width = options.max_width;
+        if (options.max_height) max_height = options.max_height;
+        if (options.min_width) min_width = options.min_width;
+        if (options.min_height) min_height = options.min_height;
+
+        this.options = {
+            min_width,
+            min_height,
+            max_width,
+            max_height
+        };
+
         this._inject_styles();
     }
 
@@ -16,124 +77,83 @@ class PopupOverlay {
         const style = document.createElement('style');
         style.id = 'popup_overlay_styles';
         style.textContent = `
-            /* Overlay – full screen, flex centering */
+            /* #region popup_overlay */
             .popup_overlay {
+                /* Layout */
                 position: fixed;
                 top: 0;
                 left: 0;
+                /* Dimensions */
                 width: 100%;
                 height: 100%;
+                /* Colors */
                 background-color: rgba(0, 0, 0, 0.5);
-                z-index: 10000;
+                /* Layout */
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                /* Z-index */
+                z-index: 1;
             }
-            /* Wrapper – flex column, limited height, sized to content width */
             .popup_wrapper {
+                /* Layout */
                 position: relative;
                 display: flex;
                 flex-direction: column;
-                max-width: 90%;
-                max-height: 85%;
+                /* Dimensions */
                 width: auto;
                 height: auto;
+                max-width: 90%;
+                max-height: 85%;
             }
-            /* Scroll panel – fills wrapper, scrolls when content overflows */
             .popup_scroll_panel {
+                /* Layout */
                 flex: 1;
+                /* Dimensions */
                 min-height: 0;
+                /* Effects */
                 overflow: auto;
+                /* Colors */
                 background: #fff;
+                /* Borders */
                 border-radius: 8px;
+                /* Effects */
                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             }
-            /* Content container – internal padding */
             .popup_content_container {
+                /* Dimensions */
                 padding: 16px;
+                /* Layout */
                 box-sizing: border-box;
             }
-            /* Close button – positioned outside wrapper */
             .popup_close_btn {
+                /* Layout */
                 position: absolute;
                 top: -25px;
                 right: -25px;
-                background: transparent;
-                border: none;
+                /* Dimensions */
                 width: 24px;
                 height: 24px;
-                font-size: 20px;
-                font-weight: bold;
-                cursor: pointer;
+                /* Layout */
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                /* Colors */
+                background: transparent;
+                /* Borders */
+                border: none;
+                border-radius: 50%;
+                /* Typography */
+                font-size: 20px;
+                font-weight: bold;
+                /* Effects */
+                cursor: pointer;
+                transition: opacity 0.2s;
+                /* Dimensions */
                 padding: 0;
                 line-height: 1;
-                border-radius: 50%;
-                transition: opacity 0.2s;
             }
-            /* CSS Editor specific styles (fixed size, no internal overflow) */
-            .css_editor_content {
-                width: 700px;
-                height: 1200px;
-                display: flex;
-                flex-direction: column;
-                box-sizing: border-box;
-                overflow: visible;
-            }
-            .css_collapsible_header {
-                cursor: pointer;
-                padding: 8px;
-                background-color: #f1f1f1;
-                margin-top: 8px;
-                user-select: none;
-                font-weight: bold;
-                border-radius: 4px;
-            }
-            .css_collapsible_content {
-                overflow: visible;
-                display: block;
-                padding-left: 8px;
-            }
-            .css_property_grid {
-                display: grid;
-                grid-template-columns: auto 1fr;
-                gap: 8px;
-                padding: 10px;
-                width: 100%;
-                box-sizing: border-box;
-                overflow: visible;
-            }
-            .css_property_grid label {
-                font-size: 12px;
-                font-weight: bold;
-            }
-            .css_property_grid input {
-                width: 100%;
-                box-sizing: border-box;
-                padding: 4px 6px;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-            }
-            .css_custom_textarea {
-                width: 100%;
-                min-height: 150px;
-                font-family: monospace;
-                font-size: 12px;
-                resize: vertical;
-                overflow: visible;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                padding: 6px;
-                box-sizing: border-box;
-            }
-            .css_editor_buttons {
-                margin-top: 20px;
-                display: flex;
-                gap: 10px;
-                justify-content: flex-end;
-            }
+            /* #endregion popup_overlay */
         `;
         document.head.appendChild(style);
     }
@@ -144,6 +164,11 @@ class PopupOverlay {
 
         this.wrapper = document.createElement('div');
         this.wrapper.className = 'popup_wrapper';
+        // Apply size options
+        if (this.options.min_width) this.wrapper.style.minWidth = this.options.min_width;
+        if (this.options.min_height) this.wrapper.style.minHeight = this.options.min_height;
+        if (this.options.max_width) this.wrapper.style.maxWidth = this.options.max_width;
+        if (this.options.max_height) this.wrapper.style.maxHeight = this.options.max_height;
 
         this.scroll_panel = document.createElement('div');
         this.scroll_panel.className = 'popup_scroll_panel';
@@ -207,4 +232,4 @@ class PopupOverlay {
         this.content_container = null;
     }
 }
-// #endregion
+// #endregion popup_overlay
