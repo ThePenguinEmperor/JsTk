@@ -1,6 +1,6 @@
 Documents/ref.rar
-Documents/ref/ref/*
-!Documents/ref/ref/UniversalAgentInstructions.md
-__pycache__/
+Documents/ref/
 Documents/specs/
+__pycache__/
 .claude/
+*.rar
