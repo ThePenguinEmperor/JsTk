@@ -1,0 +1,55 @@
+/* #region hp_panel */
+.hp_panel {
+    /* Layout */
+    display: none;
+    position: fixed;
+    /* Dimensions */
+    box-sizing: border-box;
+    min-width: 80px;
+    max-width: 320px;
+    padding: 8px 12px;
+    /* Colors */
+    background: var(--hp_bg, var(--surface, #ffffff));
+    color: var(--hp_c, var(--text_primary, #161a3a));
+    /* Borders */
+    border: 1.5px solid var(--hp_border, var(--border_light, #dcdff3));
+    border-radius: var(--radius, 6px);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 12px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    /* Effects */
+    box-shadow: var(--shadow_md, 0 4px 6px rgba(0, 0, 0, 0.1));
+    pointer-events: none;
+}
+
+.hp_panel.hp_info {
+    /* Colors */
+    --hp_c: var(--accent, #5b4bdb);
+    --hp_bg: color-mix(in srgb, var(--accent, #5b4bdb) 10%, var(--surface, #ffffff));
+    --hp_border: color-mix(in srgb, var(--accent, #5b4bdb) 45%, transparent);
+}
+
+.hp_panel.hp_warning {
+    /* Colors */
+    --hp_c: var(--warning, #f08a24);
+    --hp_bg: color-mix(in srgb, var(--warning, #f08a24) 10%, var(--surface, #ffffff));
+    --hp_border: color-mix(in srgb, var(--warning, #f08a24) 45%, transparent);
+}
+
+.hp_panel.hp_error {
+    /* Colors */
+    --hp_c: var(--danger, #e5484d);
+    --hp_bg: color-mix(in srgb, var(--danger, #e5484d) 10%, var(--surface, #ffffff));
+    --hp_border: color-mix(in srgb, var(--danger, #e5484d) 45%, transparent);
+}
+
+.hp_panel.hp_success {
+    /* Colors */
+    --hp_c: var(--success, #12a46a);
+    --hp_bg: color-mix(in srgb, var(--success, #12a46a) 10%, var(--surface, #ffffff));
+    --hp_border: color-mix(in srgb, var(--success, #12a46a) 45%, transparent);
+}
+/* #endregion */

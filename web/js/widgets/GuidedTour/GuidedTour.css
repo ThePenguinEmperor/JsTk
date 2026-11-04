@@ -1,0 +1,217 @@
+/* GuidedTour widget styles (prefix gt_). */
+
+/* #region layers */
+.gt_overlay {
+    /* Layout */
+    position: fixed;
+    inset: 0;
+    /* Colors */
+    background: rgba(0, 0, 0, 0.52);
+}
+
+.gt_ring {
+    /* Layout */
+    display: none;
+    position: fixed;
+    /* Borders */
+    border-radius: 6px;
+    /* Effects */
+    pointer-events: none;
+    box-shadow: 0 0 0 3px var(--gt_highlight_ring, var(--accent, #5b4bdb));
+    transition: left 0.18s, top 0.18s, width 0.18s, height 0.18s;
+}
+
+.gt_card {
+    /* Layout */
+    position: fixed;
+    /* Dimensions */
+    max-width: 300px;
+    padding: 12px 14px;
+    box-sizing: border-box;
+    /* Colors */
+    background: var(--surface, #ffffff);
+    color: var(--text_primary, #161a3a);
+    /* Borders */
+    border: 1px solid var(--border_light, #dcdff3);
+    border-radius: 8px;
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 13px;
+    /* Effects */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    transition: left 0.18s, top 0.18s;
+}
+/* #endregion */
+
+/* #region card_content */
+.gt_card_title {
+    /* Dimensions */
+    margin-bottom: 6px;
+    /* Typography */
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.gt_counter {
+    /* Dimensions */
+    margin-right: 4px;
+    /* Colors */
+    color: var(--border_focus, #a3a9d6);
+    /* Typography */
+    font-size: 11px;
+    font-weight: 400;
+}
+
+.gt_card_body {
+    /* Colors */
+    color: var(--text_secondary, #454b78);
+    /* Typography */
+    line-height: 1.55;
+}
+
+.gt_intro_text {
+    /* Dimensions */
+    margin: 0 0 8px 0;
+}
+
+.gt_legend {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    /* Typography */
+    font-size: 12px;
+}
+
+.gt_key {
+    /* Layout */
+    display: inline-block;
+    /* Dimensions */
+    padding: 0 5px;
+    /* Colors */
+    background: var(--surface_secondary, #f5f6ff);
+    color: var(--text_primary, #161a3a);
+    /* Borders */
+    border: 1px solid var(--border_light, #dcdff3);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    /* Typography */
+    font-size: 11px;
+    line-height: 16px;
+}
+/* #endregion */
+
+/* #region buttons */
+.gt_card_buttons {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    /* Dimensions */
+    margin-top: 12px;
+}
+
+.gt_card_nav {
+    /* Layout */
+    display: flex;
+    gap: 6px;
+}
+
+.gt_btn {
+    /* Dimensions */
+    height: 26px;
+    padding: 0 12px;
+    /* Colors */
+    background: var(--surface_secondary, #f5f6ff);
+    color: var(--text_primary, #161a3a);
+    /* Borders */
+    border: 1px solid var(--border_light, #dcdff3);
+    border-radius: 6px;
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 12px;
+    /* Effects */
+    cursor: pointer;
+}
+
+.gt_btn.gt_btn_next {
+    /* Colors */
+    background: var(--accent, #5b4bdb);
+    color: #ffffff;
+    /* Borders */
+    border-color: var(--accent, #5b4bdb);
+}
+
+.gt_btn.gt_btn_skip {
+    /* Dimensions */
+    padding: 0;
+    /* Colors */
+    background: transparent;
+    color: var(--text_secondary, #454b78);
+    /* Borders */
+    border: none;
+}
+/* #endregion */
+
+/* #region target */
+.gt_highlight_target {
+    /* Borders */
+    outline: 2px solid var(--gt_highlight_ring, var(--accent, #5b4bdb));
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+.gt_highlight_target:hover {
+    /* Effects */
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--gt_highlight_ring, var(--accent, #5b4bdb)) 30%, transparent);
+}
+/* #endregion */
+
+/* #region demo */
+.gt_demo {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    /* Dimensions */
+    padding: 12px;
+    box-sizing: border-box;
+    /* Colors */
+    background: var(--surface, #ffffff);
+    color: var(--text_primary, #161a3a);
+    /* Borders */
+    border: 1px solid var(--border_light, #dcdff3);
+    border-radius: 6px;
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 12px;
+}
+
+.gt_demo_row {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.gt_demo_input {
+    /* Layout */
+    flex: 1 1 auto;
+    /* Dimensions */
+    height: 26px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    /* Colors */
+    background: var(--surface, #ffffff);
+    color: var(--text_primary, #161a3a);
+    /* Borders */
+    border: 1px solid var(--border_light, #dcdff3);
+    border-radius: 4px;
+}
+
+.gt_demo_note {
+    /* Colors */
+    color: var(--text_secondary, #454b78);
+}
+/* #endregion */

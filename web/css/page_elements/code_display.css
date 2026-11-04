@@ -7,4 +7,42 @@
     margin-top: var(--tester_spacing_md);
     gap: var(--tester_spacing_sm);
 }
+
+.tester_code_header {
+    display: flex;
+    align-items: center;
+}
+
+.tester_code_title {
+    font-size: var(--tester_font_size_small);
+    font-weight: var(--tester_font_weight_bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--tester_color_accent);
+}
+
+.tester_code_area {
+    width: 100%;
+    padding: var(--tester_spacing_sm);
+    background-color: var(--tester_color_input_bg);
+    color: var(--tester_color_text_primary);
+    border: 1px solid var(--tester_color_border);
+    border-radius: var(--tester_radius_sm);
+    font-family: var(--tester_font_mono);
+    font-size: var(--tester_font_size_small);
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.tester_code_area:focus {
+    outline: none;
+    border-color: var(--tester_color_accent);
+    box-shadow: 0 0 0 3px var(--tester_color_focus_ring);
+}
+
+.tester_code_buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--tester_spacing_sm);
+}
 /* #endregion */

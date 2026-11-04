@@ -1,0 +1,1560 @@
+# jinker full documentation
+
+jinker is a plain JavaScript UI library for browser pages and pywebview frontends. document.oc places elements in CSS grids like Tkinter grid(); the same call builds ready-made widgets by tag.
+
+Files are served from https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/
+
+# jinker
+
+jinker is a plain-JS UI library. `document.oc` places elements in CSS grids the way Tkinter's `grid()` does. Registered widgets are built by tag through the same call.
+
+## Quick start
+
+Load the library with one parser-blocking script tag. Do not add `async` or `defer`: the loader uses `document.currentScript` and `document.write` to add every module in order.
+
+```html
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>App</title></head>
+<body>
+    <div id="app" style="height: 100vh;"></div>
+    <script src="web/js/Jinker.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let oc = document.oc;
+            oc.configure_column('app', 1, { weight: 1 });
+            oc.configure_row('app', 2, { weight: 1 });
+            oc.object_generate('h3', { parent: 'app', row: 1, col: 1, text: 'Hello', padx: 8 });
+            oc.object_generate('output_logger', { parent: 'app', row: 2, col: 1, sticky: 'nsew', options: { demo_output: false } });
+        });
+    </script>
+</body>
+</html>
+```
+
+The path in `src` can be anything; modules resolve relative to `Jinker.js`. Each widget links its own CSS next to its JS file. No stylesheet tag is needed.
+
+## OC essentials
+
+`document.oc.object_generate(tag, params)` creates an element, applies params and places it in `params.parent` (an element or an id; default `document.body`). The parent becomes `display: grid`. It returns the element.
+
+| Param | Meaning |
+|---|---|
+| `row`, `col` | 1-based cell |
+| `row_span`, `col_span` | Cells to span |
+| `sticky` | Any of `n s e w`. `ew` stretches horizontally, `nsew` fills the cell, empty centers |
+| `padx`, `pady` | Margin in px: a number or `[start, end]` |
+| `ipadx`, `ipady` | Padding in px: a number or `[start, end]` |
+| `id`, `class_name`, `text`, `value` | Basic element fields |
+| `style` | CSS string or object (kebab or camel keys) |
+| `events` | `{ click: fn, input: fn }` |
+| `attributes`, `properties` | Extra attributes and DOM properties |
+| `options` | Widget options, for registered tags only |
+
+Any other primitive key is set as an HTML attribute.
+
+```js
+let oc = document.oc;
+oc.configure_grid('form', { gap: 6 });
+oc.configure_column('form', 2, { weight: 1, minsize: 120 });
+oc.object_generate('label', { parent: 'form', row: 1, col: 1, text: 'Name', sticky: 'w' });
+let name = oc.object_generate('input', { parent: 'form', row: 1, col: 2, sticky: 'ew', id: 'name_in' });
+oc.object_generate('button', {
+    parent: 'form', row: 2, col: 1, col_span: 2, sticky: 'e', text: 'Save', padx: [0, 4],
+    events: { click: () => console.log(name.value) }
+});
+```
+
+Other calls:
+
+```js
+oc.update_widget('name_in', { value: 'abc', row: 3 });   // also moves it
+oc.bind(el, 'click', fn); oc.unbind(el, 'click');
+let el = oc.grid_forget('name_in'); oc.grid_restore(el);
+oc.grid_info(el);                       // { parent, row, col, row_span, col_span, sticky }
+oc.grid_slaves('form', { row: 1 });     // children covering row 1
+oc.remove_widget(el);                   // removes element, children and tracked handlers
+let made = oc.build_layout('app', [     // tree from specs, returns { id: element }
+    { tag: 'div', id: 'side', row: 1, col: 1, children: [
+        { tag: 'button', id: 'b1', row: 1, col: 1, text: 'One' }
+    ] }
+]);
+```
+
+Full API: `references/ObjectCreator.md`.
+
+## Placing a registered widget and nesting children
+
+A registered tag builds the widget inside a placed host div:
+
+```js
+let host = document.oc.object_generate('split_pane', {
+    parent: 'app', row: 1, col: 1, sticky: 'nsew',
+    options: { orientation: 'horizontal', size: 240, width: 0, height: 0 }
+});
+let split = host.widget_instance;          // the SplitPane instance
+document.oc.object_generate('button', { parent: host.content_container, row: 1, col: 1, text: 'Left' });
+document.oc.object_generate('button', { parent: split.pane_b, row: 1, col: 1, text: 'Right' });
+```
+
+- `host.widget_instance` is the instance (or element) the widget built.
+- `host.content_container` is where children go. It is set only for container widgets (`split_pane`, `dock_workspace`, `tabbed_container`); otherwise it is null.
+- `build_layout` nests `children` into `content_container` automatically.
+- The host gets the classes `oc_widget oc_widget_<tag>` plus your `class_name`. `text` is ignored for widget tags.
+- Missing options fall back to the registry defaults, which are demo values. Pass every option you care about.
+- You can also skip the registry and call a constructor directly, for example `new ToggleSwitch(parent_el, { label: 'On' })`.
+
+## Theming
+
+`ThemeManager` holds CSS-variable themes. Widget CSS reads these variables and has light fallbacks.
+
+```js
+set_app_theme('dark');                          // THEMES.dark on <html>
+set_app_theme({ '--accent': '#e11d48' });  // partial override
+host.widget_instance.set_theme('light');        // one widget only
+let z = get_next_z_index();                     // stacking for your own floating layers
+```
+
+- `THEMES` (`window.THEMES`) has `light` and `dark`. Keys include `--surface`, `--surface_secondary`, `--text_primary`, `--text_muted`, `--border_light`, `--accent`, `--danger`, `--success`, `--radius`, `--font_ui`, `--font_mono`.
+- `set_theme(theme)` takes a preset name or a variables object. Most widgets have it; `HintPopup.set_theme` is static.
+- `ThemeManager.apply(el, theme)` themes any element subtree.
+
+## Widget catalog
+
+| Widget | Tag | What it is | Reference |
+|---|---|---|---|
+| AnimatedGifButton | `animated_gif_button` | Icon button that animates on hover | references/AnimatedGifButton.md |
+| AppStore | none | Page-wide key/value store with subscribe | references/AppStore.md |
+| AutoComplete | `auto_complete` | Input with filtered suggestion dropdown | references/AutoComplete.md |
+| Changelog | `changelog` | "What's New" release notes modal | references/Changelog.md |
+| CollapsibleSection | none | Header that shows or hides a content block | references/CollapsibleSection.md |
+| ContextMenu | `context_menu` | Right-click menu with submenus and search | references/ContextMenu.md |
+| DockWorkspace | `dock_workspace` | Primary pane plus optional secondary pane | references/DockWorkspace.md |
+| DynamicFilter | `dynamic_filter` | Reorderable list of column filters | references/DynamicFilter.md |
+| GuidedTour | `guided_tour` | Step-by-step highlight walkthrough | references/GuidedTour.md |
+| HintPopup | none | Themed replacement for `title` tooltips | references/HintPopup.md |
+| InputWithClr | `input_with_clr` | Text input with a clear button | references/InputWithClr.md |
+| IterableEditor | `iterable_editor` | Editor for a list or dict value | references/IterableEditor.md |
+| ListSelector | `list_selector` | Searchable select/exclude list | references/ListSelector.md |
+| MessageBox | none | Toast-style message near an element | references/MessageBox.md |
+| OutputLogger | `output_logger` | Console log viewer with ANSI colors | references/OutputLogger.md |
+| PopupOverlay | none | Modal overlay with scrollable content | references/PopupOverlay.md |
+| ProgressBar | `progress_bar` | Determinate or indeterminate progress | references/ProgressBar.md |
+| QueueTray | `queue_tray` | Horizontal task queue strip | references/QueueTray.md |
+| SplitPane | `split_pane` | Resizable two-pane layout | references/SplitPane.md |
+| TabbedContainer | `tabbed_container` | Tabs with pinning, badges and split view | references/TabbedContainer.md |
+| Table | `table` | Data grid on AG Grid with filters | references/Table.md |
+| TickerBanner | `ticker_banner` | Scrolling notification bar | references/TickerBanner.md |
+| ToggleSwitch | `toggle_switch` | On/off switch | references/ToggleSwitch.md |
+| UserPrompt | `user_prompt` | Modal question, input or password prompt | references/UserPrompt.md |
+
+Widgets without a tag are used through their class directly.
+
+## Adding a widget to the registry
+
+1. Create `web/js/widgets/<Name>/<Name>.js` (and `<Name>.css` if needed).
+2. Add `'widgets/<Name>/<Name>.js'` to `JinkerLoader.FILES` in `web/js/Jinker.js`, after any widget it depends on.
+3. Register at the end of the file:
+
+```js
+window.MyWidget = MyWidget;
+if (window.WidgetRegistry) {
+    WidgetRegistry.register('my_widget', {
+        label: 'My Widget',          // tester display name
+        category: 'inputs',          // tester group
+        container: false,            // true if children can be placed inside
+        options: [
+            { name: 'label', type: 'string', default: 'Hi' },
+            { name: 'size', type: 'select', default: 'md', choices: ['sm', 'md', 'lg'] },
+            { name: 'items', type: 'json', default: [] }
+        ],
+        build: (host, options) => new MyWidget(host, options)
+    });
+}
+```
+
+Entry contract:
+- `tag` is snake_case. Registering the same tag again replaces the entry.
+- `build(host, options)` is required. `host` is the already placed div. `options` has defaults filled in.
+- `build` returns the instance, or `{ instance, content_container }` for containers.
+- If `container` is true and no `content_container` is returned, the host itself is used.
+- Option `type` is `string`, `number`, `bool`, `select` (with `choices`) or `json`. The tester builds its form from this list.
+- A `build` that throws is logged, and the host shows `<tag> failed to build`.
+- Recommended instance API: `set_theme(theme)` that calls `ThemeManager.apply(root, theme)`.
+
+## Tester
+
+Open `index.html` in a browser. Pick a tag, set its options in the generated form, choose a parent container, set grid fields, and add it. The preview shows the result, the object list tracks it, and the code panel can copy, save, load or clear the generated `document.oc` code.
+
+## Common pitfalls
+
+- `Jinker.js` with `async`, `defer` or injected by script fails: the loader needs `document.write` during parsing.
+- Code that uses jinker must run after the loader tag. Wrap DOM work in `DOMContentLoaded`, since modules load through `document.write`.
+- Hosts need a height. `split_pane`, `dock_workspace`, `tabbed_container`, `table` and `output_logger` fill their host; give the host or its grid row a size (`configure_row(..., { weight: 1 })` plus `sticky: 'nsew'` and a sized parent).
+- `split_pane`, `dock_workspace` and `tabbed_container` registry options `width` and `height` default to 520 and 260 px. Pass `0` to let the grid size the host.
+- Tracks without a `weight` are `auto`. Use `weight` to control how free space is shared, and `minsize` to keep a track from shrinking.
+- `grid_forget` returns the element. Keep it: it is detached and `getElementById` will not find it.
+- `content_container` is null for non-container widgets. Do not place children there.
+- `Table` loads AG Grid from cdn.jsdelivr.net. Offline apps must set `ag_grid_cdn` to a local copy.
+- Registry option defaults are demo data. Pass real `items`, `data` or `messages`.
+- `UserPrompt` options are a `{ label: value }` map, not an array.
+
+---
+
+<!-- reference: AnimatedGifButton -->
+
+# AnimatedGifButton
+
+File: `web/js/widgets/AnimatedGifButton/AnimatedGifButton.js`. Tag: `animated_gif_button`. Global: `window.AnimatedGifButton`.
+
+Static utility, never instantiated. The button shows a still image at rest and plays an animated GIF or SVG while hovered.
+
+## Static methods
+
+`AnimatedGifButton.create(opts)` creates a button through `document.oc` and returns it, or null without `parent`.
+
+| Option | Default | Notes |
+|---|---|---|
+| `parent` | required | Grid parent element or id |
+| `gif_src` | none | Animated image URL (data and blob URLs work) |
+| `static_src` | `gif_src` | Image shown at rest |
+| `fallback_html` | none | Button content when `gif_src` is missing |
+| `class_name` | `'animated_gif_btn btn'` | `animated_gif_btn` is always added |
+| `hint` | `''` | Button `title` |
+| `id`, `row`, `col`, `sticky`, `events` | | Passed to `object_generate` |
+
+`AnimatedGifButton.attach(btn, gif_src, static_src, fallback_html)` adds the hover behavior to an existing button. Calling it twice on one button does nothing.
+
+`AnimatedGifButton.demo_image(animated)` returns a demo SVG data URI.
+
+Registry options: `gif_src`, `static_src` (demo SVGs), `hint: 'Hover to animate'`, `class_name`, `fallback_html: ''`. The instance is the button element.
+
+## Example
+
+```js
+AnimatedGifButton.create({
+    parent: 'toolbar', row: 1, col: 1, hint: 'Refresh',
+    gif_src: 'img/refresh.gif', static_src: 'img/refresh.png',
+    events: { click: reload }
+});
+```
+
+---
+
+<!-- reference: AppStore -->
+
+# AppStore
+
+File: `web/js/widgets/AppStore/AppStore.js`. No tag. Global: `window.AppStore`.
+
+Page-wide reactive key/value store. Static only.
+
+## Static methods
+
+| Method | Notes |
+|---|---|
+| `set(key, value)` | Stores and calls every subscriber of `key` synchronously, in subscribe order |
+| `get(key)` | Stored reference, or `undefined` |
+| `subscribe(key, fn)` | `fn(value)` on every set; called at once if the key exists. Returns an unsubscribe function |
+| `set_if_changed(key, value)` | Sets only when the JSON form differs. Unserializable values always set |
+
+A subscriber that throws is logged and does not stop the others.
+
+## Example
+
+```js
+let off = AppStore.subscribe('status', s => bar.set_label(s));
+AppStore.set('status', 'Running');
+off();
+```
+
+---
+
+<!-- reference: AutoComplete -->
+
+# AutoComplete
+
+File: `web/js/widgets/AutoComplete/AutoComplete.js`. Tag: `auto_complete`. Global: `window.AutoComplete`. Element: `<auto-complete>`.
+
+Text input with a filtered dropdown, prefix auto-fill, a clear button and optional restriction to listed values. Uses shadow DOM.
+
+## Creating
+
+```js
+let ac = document.createElement('auto-complete');
+ac.configure({ placeholder: 'Fruit', allow_free_text: false });
+ac.set_completion_list(['Apple', 'Banana']);
+parent.appendChild(ac);
+```
+
+The `placeholder` attribute is read once in the constructor.
+
+## configure(options)
+
+| Option | Default | Notes |
+|---|---|---|
+| `placeholder` | `''` | |
+| `allow_free_text` | `true` | False blocks text that matches no option |
+| `min_chars` | `0` | |
+| `max_results` | `Infinity` | |
+| `filter_mode` | `'contains'` | `'contains'` or `'prefix'` |
+| `on_select` | null | `on_select(value)` on mouse selection |
+
+Registry options: `placeholder`, `items` (demo fruit list), `allow_free_text`, `min_chars`, `max_results: 50`, `filter_mode`, `value`. The instance is the element.
+
+## Members
+
+| Member | Notes |
+|---|---|
+| `set_completion_list(list)` | Sorted copy |
+| `value` | Get or set the text. Setting an unknown value is ignored when free text is off |
+| `autocomplete(delta = 0, force = false)` | Recomputes hits; `force` shows the whole list |
+| `set_custom_styles(css)` | CSS inside the shadow root |
+| `set_theme(theme)` | |
+
+## Events
+
+Both bubble and cross the shadow boundary. `event.detail.value` holds the value.
+
+| Event | When |
+|---|---|
+| `autocomplete-select` | An option is chosen by Enter, click, or set through `value` |
+| `ac-commit` | Enter is pressed |
+
+Keys: Down opens the list, Up and Down move, Enter selects, Escape closes.
+
+## Example
+
+```js
+ac.addEventListener('autocomplete-select', e => load_item(e.detail.value));
+```
+
+---
+
+<!-- reference: Changelog -->
+
+# Changelog
+
+File: `web/js/widgets/Changelog/Changelog.js`. Tag: `changelog`. Globals: `window.Changelog` and a default instance `window.changelog`.
+
+"What's New" modal with release notes paged by version, newest first.
+
+## Constructor
+
+`new Changelog(config)`. Does not open anything.
+
+| Option | Default | Notes |
+|---|---|---|
+| `title` | `"What's New"` | |
+| `versions` | `{}` | `{ version: [entries] }`, `{ version: { section: [entries] } }`, or `[{ version, <section>: [entries] }]` |
+| `markdown` | none | CHANGELOG.md style text; used instead of `versions` |
+| `current_version` | `''` | |
+| `last_seen_version` | `''` | |
+| `group_by_minor` | `true` | One page per minor version |
+| `empty_text` | `'General improvements and bug fixes.'` | |
+| `ack_label` | `'Got it!'` | Close button text |
+| `fetch_info` | null | Async, returns `{ version, last_seen_version, changelog, show_changelog }` |
+| `load_changelog` | null | Async, returns any accepted changelog shape |
+| `on_seen` | null | `on_seen(version)` when the popup closes |
+| `dont_show_again` | null | `{ label, checked, on_change(checked) }` header toggle |
+| `host_bridge` | null | `'pywebview'` (uses `window.pywebview.api`) or an object with `get_version_info`, `get_changelog`, `mark_version_seen` |
+
+Entries support `**bold**`.
+
+Registry options: `button_text`, `title`, `ack_label`, `current_version`, `group_by_minor`, `versions` (demo). The tag builds an open button.
+
+## Members
+
+| Member | Notes |
+|---|---|
+| `init()` | Async, once per instance: shows the popup only when the version is unseen |
+| `show_latest()` | Async: loads data and always shows |
+| `show(data)` | Opens now. `data`: `version`, `changelog`, `last_seen_version`, `dont_show_again_checked` |
+| `hide()` | Closes and marks the version seen |
+| `set_dont_show_again(cfg)` | Falsy removes the toggle |
+| `set_theme(theme)` | |
+| `is_visible` | Getter |
+| `Changelog.parse_markdown(md)`, `Changelog.normalize(src)`, `Changelog.compare_versions(a, b)` | Static helpers |
+
+Keys: Escape closes, arrows page.
+
+## Example
+
+```js
+let cl = new Changelog({
+    current_version: '1.2.0', last_seen_version: localStorage.getItem('seen') || '',
+    versions: { '1.2.0': { 'New Features': ['Added **dark theme**.'] } },
+    on_seen: v => localStorage.setItem('seen', v)
+});
+cl.init();
+```
+
+---
+
+<!-- reference: CollapsibleSection -->
+
+# CollapsibleSection
+
+File: `web/js/widgets/CollapsibleSection.js`. No tag. Global class `CollapsibleSection`.
+
+Bordered section with a clickable header that shows or hides its content. Starts collapsed.
+
+## Constructor
+
+`new CollapsibleSection(title, content_builder, options)`. Call `build(parent)` to create and append it.
+
+- `content_builder(content_div)` fills the content once during `build`.
+
+| Option | Default | Notes |
+|---|---|---|
+| `id` | null | Section id |
+| `class_name` | null | Extra class |
+| `margin` | `{ x: 0, y: 0 }` | px |
+
+## Members
+
+| Member | Notes |
+|---|---|
+| `build(parent)` | |
+| `expand()`, `collapse()` | |
+| `destroy()` | Removes it |
+| `container`, `contentDiv`, `isCollapsed` | Fields |
+
+The content area scrolls past 400 px.
+
+## Example
+
+```js
+let sec = new CollapsibleSection('Advanced', div => {
+    document.oc.object_generate('input', { parent: div, row: 1, col: 1, placeholder: 'Timeout' });
+}, { margin: { x: 0, y: 4 } });
+sec.build(document.getElementById('form'));
+sec.expand();
+```
+
+## Registry tag
+
+`document.oc.object_generate('collapsible_section', { parent, row, col, sticky, options: { title: 'Details', expanded: true } })` builds a section whose host is a container widget: children placed with `parent: host` go inside the section body. Options: `title` (string) and `expanded` (bool, default true in the registry). The class itself starts collapsed unless `options.expanded` is true.
+
+## Size rules
+
+- Header: always 40 px tall; the title stays on one line.
+- Default width: the width of the title row. Wide content never widens the section; the body scrolls sideways instead.
+- Default height: fits the content.
+- `max_height` (px): the body stops growing at this height and scrolls vertically.
+- `max_width` (px): the section may grow with its content up to this width, then the body scrolls sideways.
+- `full_width` (bool): fills the container width instead of the title width.
+
+---
+
+<!-- reference: ContextMenu -->
+
+# ContextMenu
+
+File: `web/js/widgets/ContextMenu/ContextMenu.js`. Tag: `context_menu`. Global: `window.ContextMenu`.
+
+Custom right-click menu bound to an element. Supports icons, async actions, nested submenus, keyboard navigation, search and per-type extra items.
+
+## Constructor
+
+`new ContextMenu(bound_el, opts)`. Throws when `bound_el` is not an element.
+
+| Option | Default | Notes |
+|---|---|---|
+| `enable_search` | `false` | Search box filtering items by label |
+| `theme_class` | `''` | Extra class on the menu |
+| `custom_css` | none | CSS text injected as a style element |
+| `on_before_show` | null | `on_before_show(item_type, event)` before opening; call `set_items` here for dynamic menus |
+
+Registry options: `area_text`, `enable_search`, `theme_class`, `items` (demo). The tag builds a right-click area.
+
+## Item definition
+
+| Field | Notes |
+|---|---|
+| `label` | Text |
+| `html` | HTML content instead of `label` |
+| `icon` | Text, HTML string (starts with `<`) or element |
+| `action` | `action()` on activate |
+| `async` | `true`: shows a spinner until the returned promise settles |
+| `disabled` | |
+| `submenu` | Array of items |
+| `type: 'separator'` | Divider |
+| `type: 'group', items` | Grouped items |
+
+## Members
+
+| Member | Notes |
+|---|---|
+| `set_items(items)`, `add_item(item)`, `remove_item(label)`, `clear_items()` | Base items |
+| `add_type_items(type, items)`, `remove_type_items(type)`, `has_type(type)` | Extra items shown after a separator when the clicked element (or an ancestor) has `data-type="<type>"` or class `<type>` |
+| `show(x, y)` | Opens at page coordinates |
+| `hide()`, `hide_tree()` | |
+| `destroy()` | Removes listeners; the instance is unusable afterwards |
+| `set_theme(theme)` | Submenus inherit it |
+| `apply_custom_css(css)` | |
+
+Keys: arrows move and open or close submenus, Enter or Space activates, Escape closes.
+
+## Example
+
+```js
+let menu = new ContextMenu(document.getElementById('files'), { enable_search: true });
+menu.set_items([
+    { label: 'Open', icon: 'O', action: () => open_file() },
+    { type: 'separator' },
+    { label: 'More', submenu: [{ label: 'Rename', action: rename }] },
+    { label: 'Upload', async: true, action: () => upload() }
+]);
+menu.add_type_items('file_row', [{ label: 'Delete', action: delete_file }]);
+```
+
+---
+
+<!-- reference: DockWorkspace -->
+
+# DockWorkspace
+
+File: `web/js/widgets/DockWorkspace/DockWorkspace.js`. Tag: `dock_workspace` (container). Global: `window.DockWorkspace`.
+
+Two-pane split with an always shown primary pane and an optional secondary pane. Pane bodies are reused, so their content survives show, hide, swap and orientation changes.
+
+## Constructor
+
+`new DockWorkspace(parent, options)`. Call `render()` to build and mount; it returns the instance.
+
+| Option | Default | Notes |
+|---|---|---|
+| `primary_id` | `'log'` | |
+| `secondary_id` | `'python'` | |
+| `panes` | `{}` | `{ id: { title, icon } }`; title defaults to the id |
+| `default_split` | `50` | Primary pane percent |
+| `min_split` | `15` | |
+| `max_split` | `85` | |
+| `orientation` | `'horizontal'` | Or `'vertical'` |
+| `show_headers` | `true` | Pane title bars |
+| `on_secondary_toggle` | null | `on_secondary_toggle(visible)` |
+| `on_layout_change` | null | `on_layout_change({ split_pct, orientation, secondary_visible })` |
+
+Registry defaults: `primary_id: 'main'`, `secondary_id: 'side'`, matching `panes`, `show_secondary: true`, `default_split: 60`, plus `width: 560` and `height: 260` (host px; `0` leaves unset). `content_container` is the primary pane body.
+
+## Members
+
+| Member | Notes |
+|---|---|
+| `get_pane_body(id)` | Body element; the secondary body exists only after it was shown once |
+| `show_secondary()`, `hide_secondary()`, `is_secondary_visible()` | |
+| `get_split()`, `set_split(pct)` | Primary percent |
+| `set_orientation(o)`, `toggle_orientation()` | |
+| `swap_panes()` | Reverses display order |
+| `element` | Getter |
+| `set_theme(theme)` | |
+
+## Example
+
+```js
+let dock = new DockWorkspace(document.getElementById('work'), {
+    primary_id: 'log', secondary_id: 'code',
+    panes: { log: { title: 'Log' }, code: { title: 'Code' } }
+}).render();
+dock.show_secondary();
+dock.get_pane_body('code').textContent = 'print(1)';
+```
+
+---
+
+<!-- reference: DynamicFilter -->
+
+# DynamicFilter
+
+File: `web/js/widgets/DynamicFilter/DynamicFilter.js`. Tag: `dynamic_filter`. Global: `window.DynamicFilter`.
+
+Ordered list of column filters. Each row has an enabled checkbox, a type dropdown and a drag handle.
+
+## Constructor
+
+`new DynamicFilter(container, opts)`. Builds at once.
+
+| Option | Default | Notes |
+|---|---|---|
+| `items` | `[]` | `[{ name, type, enabled }]`; missing `type` is the first type, missing `enabled` is true |
+| `types` | `['include', 'exclude', 'range']` | Dropdown values |
+| `on_change` | null | `on_change(items)` after a check, type change or reorder |
+
+Registry defaults: three demo items (`status`, `owner`, `created_at`) and the default types.
+
+## Members
+
+| Member | Notes |
+|---|---|
+| `get_value()` | Copies of `{ name, type, enabled }` in display order |
+| `set_items(items)` | Replaces rows; does not call `on_change` |
+| `set_theme(theme)` | |
+
+## Example
+
+```js
+let filters = new DynamicFilter(document.getElementById('filters'), {
+    items: [{ name: 'status', type: 'include' }, { name: 'owner', type: 'exclude', enabled: false }],
+    on_change: items => apply_filters(items)
+});
+```
+
+---
+
+<!-- reference: GuidedTour -->
+
+# GuidedTour
+
+File: `web/js/widgets/GuidedTour/GuidedTour.js`. Tag: `guided_tour`. Global: `window.GuidedTour`.
+
+Step-by-step walkthrough. It dims the page, highlights one element at a time and shows a card with Skip, Back and Next. Configured and started through static methods.
+
+## Static methods
+
+| Method | Notes |
+|---|---|
+| `configure(cfg)` | Merges config; `steps` replaces the list, `intro` merges by key |
+| `start()` | Starts from the first step |
+| `restart()` | Same as `start()` |
+
+## Config
+
+| Key | Default | Notes |
+|---|---|---|
+| `steps` | `[]` | Step list |
+| `intro` | `{ enabled: true, title: 'Welcome to the Guided Tour', description: '...' }` | First slide with a key legend |
+| `on_navigate` | null | `on_navigate(section)`, may be async; runs when a step's section changes |
+| `on_finish` | null | Called once when the tour ends |
+
+## Step
+
+| Field | Notes |
+|---|---|
+| `target` | CSS selectors, comma separated, tried in order. Missing or zero-size targets are skipped |
+| `title` | HTML |
+| `text` | HTML body |
+| `no_target` | Centered card, no highlight |
+| `navigate` | Section name for this and later steps |
+| `before_step` | Function (may be async) run before the step |
+| `before_step_delay` | ms to wait after `before_step` |
+
+Keys: Right or Enter next, Left back, Escape quits. Clicking the dim area quits.
+
+Registry options: `button_label`, `intro_enabled`, `intro_title`, `intro_description`. The tag builds a small demo panel with a start button.
+
+## Example
+
+```js
+GuidedTour.configure({
+    intro: { title: 'Welcome', description: 'A quick tour.' },
+    steps: [
+        { target: '#run_btn', title: 'Run', text: 'Starts the job.' },
+        { target: '#log', title: 'Log', text: 'Shows <b>output</b>.' }
+    ],
+    on_finish: () => localStorage.setItem('tour_done', '1')
+});
+GuidedTour.start();
+```
+
+---
+
+<!-- reference: HintPopup -->
+
+# HintPopup
+
+File: `web/js/widgets/HintPopup/HintPopup.js`. No tag. Global: `window.HintPopup`.
+
+Page-wide singleton that replaces native `title` tooltips with a themed panel. It activates itself on load. Static only.
+
+## Behavior
+
+- Hovering any element with a `title` shows the hint after `HintPopup.DELAY_MS` (350 ms).
+- The panel goes below the element, or above when there is no room.
+- Scrolling or leaving the element hides it.
+- `data-hint-type` on the element picks a style: `info`, `warning`, `error` or `success`.
+
+## Static members
+
+| Member | Notes |
+|---|---|
+| `DELAY_MS` | Hover delay in ms |
+| `show(text, anchor, { type })` | Shows a hint now next to `anchor` |
+| `cancel()` | Hides the hint |
+| `set_type(el, type)` | Sets or removes `data-hint-type` |
+| `set_theme(theme)` | Themes the panel only |
+| `init()` | Runs once automatically |
+
+## Example
+
+```js
+let btn = document.oc.object_generate('button', { parent: 'app', row: 1, col: 1, text: 'Delete', title: 'Removes the file' });
+HintPopup.set_type(btn, 'warning');
+HintPopup.show('Saved', btn, { type: 'success' });
+```
+
+## Flavors
+
+Set `data-hint-type` (or call `HintPopup.set_type(el, type)`) to `info`, `success`, `warning` or `error` to colour the hint. `HintPopup.show(text, anchor, { type })` shows one at once.
+
+---
+
+<!-- reference: InputWithClr -->
+
+# InputWithClr
+
+File: `web/js/widgets/InputWithClr/InputWithClr.js`. Tag: `input_with_clr`. Global: `window.InputWithClr`.
+
+Single-line input with a clear button that shows on hover while the field has text.
+
+## Constructor
+
+`new InputWithClr(container, opts)`. Replaces the container's children with the widget.
+
+| Option | Default | Notes |
+|---|---|---|
+| `placeholder` | `''` | |
+| `value` | `''` | |
+| `type` | `'text'` | Input type |
+| `class_name` | `''` | Added to the wrapper; also `<class>_input` and `<class>_clr` on the parts |
+| `input_attrs` | none | `{ name: value }`; `true` sets an empty attribute, `false` skips. Without it, `autocomplete="off"` is set |
+| `on_input` | null | `on_input(value)` on typing, clear and `set_value` |
+| `custom_css` | none | CSS text injected as a new style element |
+| `replace_input` | none | An existing `input` to replace in place; its placeholder and value are reused |
+
+Registry defaults: `placeholder: 'Search...'`, `value: 'Hover to clear me'`, `type: 'text'`, `class_name: ''`.
+
+## Members
+
+| Member | Notes |
+|---|---|
+| `input` | The input element |
+| `get_value()` | |
+| `set_value(val)` | Fires `on_input` |
+| `set_disabled(flag)` | Hides the clear button while disabled |
+| `apply_custom_css(css)` | Adds one more style element per call |
+| `set_theme(theme)` | Applied to the container |
+
+## Example
+
+```js
+let search = new InputWithClr(document.getElementById('search_box'), {
+    placeholder: 'Filter...', on_input: text => filter_rows(text)
+});
+```
+
+---
+
+<!-- reference: IterableEditor -->
+
+# IterableEditor
+
+File: `web/js/widgets/IterableEditor/IterableEditor.js`. Tag: `iterable_editor`. Global: `window.IterableEditor`.
+
+Editor for a list or dict of JSON-compatible values. Popup mode has Apply/Cancel, a code panel, an add form and nested child editors. Inline mode is a compact list. Accepts JSON and Python literal text (`None`, `True`, single quotes).
+
+## Constructor
+
+`new IterableEditor(container, mode, current_val, config)`. Renders nothing until `render()` or `open()`.
+
+- `container`: inline host and `set_theme` target; may be null for popups.
+- `mode`: `'list'`; anything else is dict.
+
+| Config | Default | Notes |
+|---|---|---|
+| `display_mode` | popup | `'inline'` for the inline list |
+| `title` | `'Edit list'` / `'Edit dict'` | |
+| `on_change` | null | `on_change(data)` on every edit |
+| `on_apply` | null | `on_apply(data)` on Apply; inline mode calls it on every committed change |
+| `show_item_numbers` | `true` | List mode |
+| `item_number_base` | `1` | `0` or `1` |
+| `validate_item` | null | `validate_item(value, key)`; return `true` to accept or a message string to reject |
+| `row_renderer` | null | `row_renderer(key, value, index, is_inline)` returns a row element, or null for the built-in row |
+| `custom_add_form_factory` | null | `factory(push)` returns an element; `push(value)` for lists, `push(key, value)` for dicts |
+
+Registry options: `mode: 'list'`, `display_mode: 'inline'`, `title`, `value` (demo), `show_item_numbers`, `item_number_base`. Popup mode builds an "Open editor" button.
+
+## Members
+
+| Member | Notes |
+|---|---|
+| `render()` / `open()` | Builds the view; returns the instance |
+| `close()` | Closes without applying |
+| `add(val)` | List mode |
+| `add_entry(key, val)` | Dict mode |
+| `edit(idx_or_key, val)`, `remove(idx_or_key)`, `reorder(from, to)` | |
+| `get_data()`, `get_list()`, `get_dict()`, `data` | Deep copies |
+| `set_theme(theme)` | |
+
+## Example
+
+```js
+let ed = new IterableEditor(null, 'dict', { host: 'srv1', port: 22 }, {
+    title: 'Connection', on_apply: data => save_config(data)
+});
+ed.open();
+```
+
+---
+
+<!-- reference: ListSelector -->
+
+# ListSelector
+
+File: `web/js/widgets/ListSelector/ListSelector.js`. Tag: `list_selector`. Global: `window.ListSelector`.
+
+Searchable list where each item is selected, off, or (optionally) excluded. Clicking a row cycles its state. Selected rows can be reordered by drag and drop. Right-click opens a menu (needs `ContextMenu`) with copy and bulk actions.
+
+## Constructor
+
+`new ListSelector(container, opts)`. Builds at once.
+
+| Option | Default | Notes |
+|---|---|---|
+| `items` | `[]` | Strings |
+| `selected` | `[]` | Ordered selection |
+| `excluded` | `[]` | |
+| `allow_exclude` | `false` | Adds the excluded state: off, selected, excluded, off |
+| `on_change` | null | `on_change({ selected, excluded })` on every user change |
+| `sub_status_map` | `{}` | `{ item: status }`; adds `ls_sub_<status>` class to the row |
+| `extra_context_menu_items` | null | ContextMenu items, or `fn(row_el_or_null)` returning them |
+| `status_color_dict` | `{}` | Stored only |
+
+Registry defaults: demo `items`, `selected`, `excluded`, `allow_exclude: true`, `sub_status_map: { role: 'group' }`.
+
+## Members
+
+| Member | Notes |
+|---|---|
+| `get_value()` | `{ selected, excluded }` copies |
+| `set_items(items, selected, excluded)` | Replaces all; does not call `on_change` |
+| `set_theme(theme)` | |
+| `ListSelector.copy_text(text)` | Static clipboard helper |
+
+## Example
+
+```js
+let cols = new ListSelector(document.getElementById('cols'), {
+    items: ['id', 'name', 'email'], selected: ['name'], allow_exclude: true,
+    on_change: v => console.log(v.selected, v.excluded)
+});
+```
+
+---
+
+<!-- reference: MessageBox -->
+
+# MessageBox
+
+File: `web/js/widgets/MessageBox.js`. No tag. Global: `window.MessageBox`.
+
+Toast-style message, fixed on the page, positioned next to a target element or centered. Closes on its close button or after a timeout.
+
+## Constructor
+
+`new MessageBox(options)`, then `show()`.
+
+| Option | Default | Notes |
+|---|---|---|
+| `text` | `''` | Plain text, newlines kept |
+| `type` | `'info'` | `info`, `success`, `error` or `warning` |
+| `timeout` | `30000` | ms; `0` keeps it open |
+| `target` | null | Element to position against; null centers |
+| `position` | `'top'` | `top`, `bottom`, `left`, `right` or `over` |
+| `css` | `{}` | `{ container, text, close_button }` style objects |
+
+## Members
+
+| Member | Notes |
+|---|---|
+| `show()` | Builds, places and starts the timeout |
+| `destroy()` | Removes it |
+| `MessageBox.info(text, target, opts)` | Static; also `success`, `error`, `warning`. Returns the shown instance |
+
+## Example
+
+```js
+MessageBox.success('Saved', document.getElementById('save_btn'), { timeout: 3000, position: 'bottom' });
+```
+
+---
+
+<!-- reference: ObjectCreator -->
+
+# ObjectCreator (document.oc)
+
+File: `web/js/ObjectCreator.js`. Singleton: `document.oc`. `new ObjectCreator()` returns the same instance.
+
+Wherever a call takes `parent` or `widget`, pass an element or an element id string.
+
+## object_generate(tag, params = {})
+
+Creates `tag`, applies params, places it in a grid parent and returns it.
+
+| Param | Type | Notes |
+|---|---|---|
+| `parent` | element or id | Default `document.body`. Becomes `display: grid`. Logs `[oc] parent_not_found` and returns the unplaced element when missing |
+| `row`, `col` | number | 1-based start cell |
+| `row_span`, `col_span` | number | Cells to span |
+| `sticky` | string | Letters `n s e w`. `ew` stretches horizontally, `ns` vertically, `nsew` both; one letter aligns to that side; empty centers |
+| `id`, `class_name` | string | |
+| `text` | string | Sets `textContent` |
+| `value` | any | Property on input, textarea and select; attribute elsewhere |
+| `style` | string or object | `'color: red; width: 10px'` or `{ color: 'red', 'font-size': '12px' }` |
+| `events` | object | `{ event_name: handler }`, tracked for `unbind` |
+| `padx`, `pady` | number or `[start, end]` | Margins in px (left/right, top/bottom) |
+| `ipadx`, `ipady` | number or `[start, end]` | Paddings in px |
+| `pad_x`, `pad_y`, `ipad_x`, `ipad_y` | | Aliases of the above |
+| `attributes` | object | Primitive values become attributes |
+| `properties` | object | Assigned to the element |
+| `options` | object | Widget options for registered tags |
+
+Any other primitive key is set as an attribute (`placeholder: 'Name'`, `type: 'checkbox'`).
+
+Registered tags (see `WidgetRegistry`) create a placed `div` host with classes `oc_widget oc_widget_<tag>`, build the widget inside it and return the host. `host.widget_instance` is the instance; `host.content_container` is the child area or null. `text` is ignored for these tags.
+
+```js
+let btn = document.oc.object_generate('button', {
+    parent: 'toolbar', row: 1, col: 3, sticky: 'e', text: 'Run',
+    padx: [4, 0], ipadx: 10, style: { fontWeight: 'bold' },
+    events: { click: run_job }, title: 'Start the job'
+});
+```
+
+## build_layout(parent, specs)
+
+Builds a tree from `[{ tag, children: [...], ...params }]`. Children go into the created element, or its `content_container` for widget hosts. Returns `{ id: element }` for every spec with an id.
+
+```js
+let els = document.oc.build_layout('app', [
+    { tag: 'tabbed_container', id: 'tabs', row: 1, col: 1, sticky: 'nsew',
+      options: { tabs: [{ id: 'main', label: 'Main' }], width: 0, height: 0 },
+      children: [{ tag: 'button', id: 'go', row: 1, col: 1, text: 'Go' }] }
+]);
+```
+
+## Grid configuration
+
+| Call | Notes |
+|---|---|
+| `configure_column(parent, col, { weight = 0, minsize = 0, pad = 0 })` | `weight` in fr; `minsize` and `pad` in px. Pad is added on both sides to the minimum size |
+| `configure_row(parent, row, { weight = 0, minsize = 0, pad = 0 })` | Same for rows |
+| `configure_grid(parent, { gap, gap_x, gap_y })` | Gaps in px; `gap` sets both axes |
+
+A track with `weight > 0` becomes `minmax(min, <weight>fr)`; with only a minimum it becomes `minmax(min, auto)`; otherwise `auto`. Templates are rebuilt on every place, move or remove.
+
+## Widget management
+
+| Call | Returns | Notes |
+|---|---|---|
+| `update_widget(widget, props)` | | Accepts `text`, `value`, `class_name`, `id`, `style` (merged), pads, `events` (added), `attributes`, `properties`, and `row`, `col`, `row_span`, `col_span`, `sticky` (moves it) |
+| `remove_widget(widget)` | | Removes the element and drops tracked handlers on it and its descendants |
+| `grid_forget(widget)` | element or null | Detaches but keeps the placement. Keep the returned element |
+| `grid_restore(el)` | | Re-attaches a forgotten element at its old cell |
+| `grid_info(widget)` | object or null | `{ parent, row, col, row_span, col_span, sticky }` |
+| `grid_slaves(parent, { row, col })` | element[] | Children covering the cell; omit `row` or `col` for a whole column or row |
+
+## Events
+
+| Call | Notes |
+|---|---|
+| `bind(widget, event_name, handler)` | `addEventListener` plus tracking |
+| `unbind(widget, event_name?, handler?)` | One handler, all of one event, or all tracked handlers |
+
+Only handlers added through `bind` or `events` are tracked.
+
+## Command strings
+
+| Call | Returns |
+|---|---|
+| `parse_command_string(text)` | Params with a `tag` key, or null |
+| `validate_command_string(text)` | `{ valid, errors, params }` |
+
+Both take text of the form `document.oc.object_generate('tag', { ... });`. The object literal is evaluated with `new Function`, so pass trusted text only. Validation requires `row` and `col`, checks spans, pads and `sticky`, and requires `parent` to be an id string.
+
+---
+
+<!-- reference: OutputLogger -->
+
+# OutputLogger
+
+File: `web/js/widgets/OutputLogger/OutputLogger.js`. Tag: `output_logger`. Global: `window.OutputLogger`. Element: `<output-logger>`.
+
+Console-style log viewer with ANSI colors, auto-scroll, search with match navigation, type filters, streaming lines and optional range paging for large logs.
+
+## Constructor
+
+`new OutputLogger(config)` creates a detached `<output-logger>`. `render()` returns it; you append it. The host needs a height.
+
+| Config | Default | Notes |
+|---|---|---|
+| `title` | `'Output Logger'` | |
+| `auto_scroll` | `true` | |
+| `max_entries` | `5000` | Line cap |
+| `prune_count` | `1000` | Lines dropped when the cap is hit |
+| `enable_ctrl_f_search` | `false` | |
+| `enable_ctrl_wheel_zoom` | `false` | Font size 8 to 32 px |
+| `on_clear` | null | Async; called by the menu Clear before clearing the view |
+| `host_clear` | null | Used when `on_clear` is not set; return `false` to log a failure |
+| `extra_context_menu_items` | null | ContextMenu items, or `fn(target)` |
+| `virtual_scroll` | `false` | Scrollbar spans the whole dataset in range mode |
+| `on_request_range` | null | Range paging source, see below |
+| `window_rows` | `2000` | Rows per range request |
+| `overscan_rows` | `200` | |
+| `on_position_change` | null | `on_position_change(position, total)` |
+
+Registry options: `title`, `auto_scroll`, `enable_ctrl_f_search: true`, `enable_ctrl_wheel_zoom: true`, `max_entries`, `prune_count`, `demo_output: true`. The registry sets host height to 280 px if unset.
+
+## Methods
+
+| Method | Notes |
+|---|---|
+| `initialize(config)` | Merges config |
+| `add_output(text, type = 'stdout', { partial })` | Types: `stdout`, `stderr`, `info`, `warning`, `error` |
+| `append_to_last_output(chunk, type)` | Streams into the open line; a trailing newline ends it |
+| `clear_output()` | |
+| `update_status(text, mode)` | Mode `idle`, `running`, `success`, `error` |
+| `set_auto_scroll(flag)`, `scroll_to_bottom()` | |
+| `open_search(term)`, `close_search()` | |
+| `set_font(family, size)`, `set_font_size(px)` | |
+| `set_range_source(fn)`, `refresh_range()`, `scroll_to_position(pos)`, `get_position()` | Range paging |
+| `set_theme(theme)` | |
+
+## Range paging
+
+`on_request_range(request)` is async. `request` is `{ direction: 'older' | 'newer' | 'at', cursor, count, position }`. Return `{ lines, prev_cursor, next_cursor, position, total }`. Each line is a string or `{ text, type, position, cursor_before, cursor_after }`. A null cursor means that edge is reached.
+
+## Page globals
+
+For pywebview `evaluate_js`, these act on the first `<output-logger>`: `logger_initialize(config)`, `logger_add_output(text, type)`, `logger_clear_ui_output()`, `logger_update_status(text, mode)`.
+
+## Example
+
+```js
+let log = new OutputLogger({ title: 'Build', enable_ctrl_f_search: true });
+document.getElementById('log_host').appendChild(log.render());
+log.add_output('\x1b[32mok\x1b[0m compiled', 'stdout');
+log.add_output('disk almost full', 'warning');
+```
+
+---
+
+<!-- reference: PopupOverlay -->
+
+# PopupOverlay
+
+File: `web/js/widgets/PopupOverlay.js`. No tag. Global class `PopupOverlay`.
+
+Modal overlay with a scrollable content panel and a close button. Escape, the close button or a click outside closes it.
+
+## Constructor
+
+`new PopupOverlay(content_builder, options, on_close)`.
+
+- `content_builder(container)` fills the content element when the popup opens.
+- `on_close()` runs when it closes.
+
+| Option | Default | Notes |
+|---|---|---|
+| `width`, `height` | none | Minimum size in px, used only when within the max limits |
+| `min_width`, `min_height` | none | CSS values |
+| `max_width` | `'90%'` | |
+| `max_height` | `'85%'` | |
+
+## Members
+
+| Member | Notes |
+|---|---|
+| `open()` | Builds on first call and shows |
+| `close()` | Calls `on_close` and destroys |
+| `destroy()` | Removes without `on_close` |
+| `content_container` | Content element while open |
+
+Each close destroys the DOM; the next `open()` rebuilds it with `content_builder`.
+
+## Example
+
+```js
+let popup = new PopupOverlay(box => {
+    document.oc.object_generate('h3', { parent: box, row: 1, col: 1, text: 'Settings' });
+}, { width: 400 }, () => console.log('closed'));
+popup.open();
+```
+
+---
+
+<!-- reference: ProgressBar -->
+
+# ProgressBar
+
+File: `web/js/widgets/ProgressBar/ProgressBar.js`. Tag: `progress_bar`. Global: `window.ProgressBar`.
+
+## Constructor
+
+`new ProgressBar(container, opts)`. Builds nothing until `render()`, which appends to `container` and returns the instance.
+
+| Option | Default | Notes |
+|---|---|---|
+| `value` | `0` | Fraction 0 to 1, clamped |
+| `indeterminate` | `false` | Animated mode |
+| `label` | `''` | |
+| `show_percent` | `true` | |
+| `state` | `'idle'` | `idle`, `running`, `success` or `error` (color) |
+| `compact` | `false` | Track only, no label row |
+| `on_click` | null | `on_click(event, bar)`; also makes the bar clickable |
+
+Registry defaults: `value: 0.45`, `label: 'Uploading files'`, `state: 'running'`, `indeterminate: false`, `show_percent: true`, `compact: false`.
+
+## Members
+
+Setters return the instance for chaining.
+
+| Member | Notes |
+|---|---|
+| `render()` | Builds once |
+| `set_progress(value)` | Also leaves indeterminate mode |
+| `set_indeterminate(flag)` | |
+| `set_label(text)` | |
+| `set_state(state)` | Unknown values become `idle` |
+| `reset()` | Value 0, state `idle`, not indeterminate; keeps the label |
+| `set_theme(theme)` | Held until render if called earlier |
+| `value`, `state`, `is_indeterminate`, `element` | Getters |
+
+## Example
+
+```js
+let bar = new ProgressBar(document.getElementById('status'), { label: 'Upload', state: 'running' }).render();
+bar.set_progress(0.6);
+bar.set_state('success').set_label('Done');
+```
+
+---
+
+<!-- reference: QueueTray -->
+
+# QueueTray
+
+File: `web/js/widgets/QueueTray/QueueTray.js`. Tag: `queue_tray`. Globals: `QueueTray`, `QueueTrayElement`, `queue_update(tasks)`. Element: `<queue-tray>`.
+
+Horizontal task queue strip with chips, bundles, drag reorder and a minimized tag. `set_items` reconciles the full queue state and reuses chips by id.
+
+## Constructor
+
+`new QueueTray(options)` creates a detached `<queue-tray>`. `render()` returns it; you append it.
+
+| Option (hook) | Notes |
+|---|---|
+| `on_item_activate` | `on_item_activate(id)` on chip double click |
+| `on_item_cancel` | `on_item_cancel(id)` on the cancel button; replaces local removal |
+| `on_reorder` | `on_reorder(ids)` after a drop |
+| `host_bridge` | Object with `remove_queue_item(id)` returning `{ success, tasks }` and `reorder_queue(ids)`; used when the matching hook is not set |
+
+Without hooks, cancel removes the chip locally.
+
+## Item shape
+
+| Field | Notes |
+|---|---|
+| `id` | Required, matched as a string |
+| `title` | Shown truncated to 15 characters |
+| `status` | `idle` (default), `running` or `scheduled` |
+| `type: 'bundle'`, `items` | Bundle with child items |
+| `description`, `action` | Shown in the tooltip |
+| `show_cancel` | Default true |
+
+The first item cannot be cancelled or moved. Scheduled items cannot be dragged.
+
+## Members
+
+| Member | Notes |
+|---|---|
+| `set_items(items)` | Full queue state |
+| `remove_first_item()`, `remove_item(index)` | Local only |
+| `minimize()` | |
+| `set_theme(theme)` | |
+| `element.configure(hooks)` | Change hooks later |
+
+`window.queue_update(tasks)` calls `set_items` on the first `<queue-tray>` in the page; handy from pywebview `evaluate_js`.
+
+Registry options: `items` (demo), `minimized`.
+
+## Example
+
+```js
+let tray = new QueueTray({ on_item_cancel: id => pywebview.api.cancel(id) });
+document.getElementById('footer').appendChild(tray.render());
+tray.set_items([{ id: 1, title: 'Build', status: 'running' }, { id: 2, title: 'Test' }]);
+```
+
+---
+
+<!-- reference: SplitPane -->
+
+# SplitPane
+
+File: `web/js/widgets/SplitPane/SplitPane.js`. Tag: `split_pane` (container). Global: `window.SplitPane`.
+
+Resizable two-pane layout. The primary pane owns a pixel size; the other pane takes the rest. The divider works with mouse, touch and keyboard. Double click toggles collapse.
+
+## Constructor
+
+`new SplitPane(container, options)`. Call `render()` to build and mount; it returns the instance. With a null container, append `.element` yourself.
+
+| Option | Default | Notes |
+|---|---|---|
+| `orientation` | `'horizontal'` | `'horizontal'` (side by side) or `'vertical'` (stacked) |
+| `primary` | `'first'` | `'first'` or `'last'`: which pane owns the size |
+| `size` | `240` | Primary size in px |
+| `min_size` | `80` | |
+| `max_size` | `800` | |
+| `handle_size` | `6` | Divider px |
+| `keyboard_step` | `16` | Arrow key step px |
+| `collapsed` | `false` | |
+| `collapsible` | `true` | |
+| `storage_key` | null | Saves size and collapsed state in localStorage |
+| `on_resize` | null | `on_resize(size, split)` |
+| `on_collapse` | null | `on_collapse(collapsed, split)` |
+
+Registry adds `width: 520` and `height: 260` (host size in px; `0` leaves it unset) and uses `size: 200`. `content_container` is `pane_a`.
+
+## Members
+
+| Member | Notes |
+|---|---|
+| `pane_a`, `pane_b` | First (left/top) and second pane elements |
+| `primary_pane`, `element`, `is_collapsed` | Getters |
+| `set_size(px)`, `get_size()` | |
+| `collapse()`, `expand()`, `toggle()` | |
+| `set_theme(theme)` | |
+
+## Example
+
+```js
+let host = document.oc.object_generate('split_pane', {
+    parent: 'app', row: 1, col: 1, sticky: 'nsew',
+    options: { size: 260, storage_key: 'main_split', width: 0, height: 0 }
+});
+let split = host.widget_instance;
+document.oc.object_generate('div', { parent: split.pane_a, row: 1, col: 1, text: 'Nav' });
+document.oc.object_generate('div', { parent: split.pane_b, row: 1, col: 1, text: 'Body' });
+```
+
+---
+
+<!-- reference: TabbedContainer -->
+
+# TabbedContainer
+
+File: `web/js/widgets/TabbedContainer/TabbedContainer.js`. Tag: `tabbed_container` (container). Global: `window.TabbedContainer`.
+
+Tab bar plus content area. Supports pinning, fixed slots, badges, drag reorder, a right-click tab menu and a split view (uses `DockWorkspace`).
+
+## Constructor
+
+`new TabbedContainer(mount, options)`. Call `render()` before any tab call; it returns the instance.
+
+| Option | Default | Notes |
+|---|---|---|
+| `id` | null | |
+| `allow_pin` | `false` | Pin entries in the tab menu |
+| `max_pinned` | null | Pin limit; null is unlimited |
+| `max_label_chars` | null | Label cap; longer labels get a tooltip |
+| `allow_split` | `true` | Split entries in the tab menu |
+| `before_close` | null | `before_close(id)`; return `false` (or a promise of false) to veto |
+| `extra_context_menu_items` | null | ContextMenu items, or `fn(tab_id)` returning them |
+
+Registry options: `tabs` (`[{ id, label, ...create_tab options }]`), `id`, `allow_pin: true`, `max_pinned`, `max_label_chars` (`0` is none), `allow_split`, `width: 520`, `height: 260` (host px; `0` leaves unset). `content_container` is the first tab's content.
+
+## Tab methods
+
+Most return the instance.
+
+| Method | Notes |
+|---|---|
+| `create_tab(id, label, opts)` | `opts`: `pinned`, `closable` (default true), `fixed_pos` (1-based slot), `always_last`, `content` (element), `icon` (HTML), `exclude_from_fast_travel`, `max_label_chars`. Only the first tab auto-activates |
+| `delete_tab(id)` | Runs `before_close`; pinned tabs cannot be deleted |
+| `switch_tab(id)` | |
+| `get_content_div(id)` | Content element, or null |
+| `clear_tab(id)` | Empties the content |
+| `rename_tab(id, label)` | |
+| `move_tab(id, index)` | Regular tabs only |
+| `set_pinned(id, flag)`, `set_closable(id, flag)` | |
+| `set_tab_badge(id, badge)` | Empty or null removes it |
+| `set_tab_tooltip(id, text)` | |
+| `get_actions_zone()` | Bar area for your own buttons |
+| `set_theme(theme)` | Applied to `mount` |
+
+## Split view
+
+| Method | Notes |
+|---|---|
+| `split_tab(id, orientation = 'horizontal')` | Opens the split and moves the tab into the second pane |
+| `move_to_other_pane(id)` | |
+| `close_split()` | Moves all tabs back |
+| `is_split()` | |
+| `get_split_state()` | null, or `{ orientation, primary_ids, secondary_ids, active_ids, split_pct }` |
+| `set_split_state(state)` | Restores a snapshot; null closes |
+
+## Events
+
+Bubbling CustomEvents on the root (listen on `mount`):
+
+| Event | `detail` |
+|---|---|
+| `tabbed_tab_selected` | `{ id, pane }` |
+| `tabbed_list_changed` | `{ action, id, pane, tabs: [{ id, label, pinned, closable, pane }] }` |
+| `tabbed_split_changed` | `get_split_state()` result |
+
+## Example
+
+```js
+let mount = document.getElementById('tabs');
+let tabs = new TabbedContainer(mount, { allow_pin: true }).render();
+tabs.create_tab('log', 'Log').create_tab('settings', 'Settings', { always_last: true });
+document.oc.object_generate('button', { parent: tabs.get_content_div('log'), row: 1, col: 1, text: 'Clear' });
+mount.addEventListener('tabbed_tab_selected', e => console.log(e.detail.id));
+```
+
+---
+
+<!-- reference: Table -->
+
+# Table
+
+File: `web/js/widgets/Table/Table.js`. Tag: `table`. Global: `window.Table`.
+
+Data grid on AG Grid Community with search, column value filters, a cell context menu, Ctrl+C copy, column actions and export through a callback. AG Grid is loaded once per page from `ag_grid_cdn`.
+
+## Constructor
+
+`new Table(container, options)`. `container` is an element or a CSS selector; throws when not found. The container needs a height.
+
+| Option | Default | Notes |
+|---|---|---|
+| `fetch_data` | null | Async, returns `{ data: rows, column_order?, error? }`. Called at start when there is no `initial_data` |
+| `initial_data` | null | Rows to show at once |
+| `initial_column_order` | null | Field names first, in order |
+| `on_save` | null | Async `on_save(displayed_rows)` returning `{ blob, filename }`; the blob is downloaded |
+| `on_error` | null | `on_error(message)`; default is MessageBox or `alert` |
+| `on_grid_ready` | null | `on_grid_ready(params)` |
+| `on_grid_size_changed` | null | |
+| `enable_search` | `false` | Header search box |
+| `enable_refresh` | `true` | Header refresh button |
+| `enable_save` | `true` | Header save button |
+| `enable_filter` | `true` | Funnel icons with a value list per column |
+| `enable_context_menu` | `true` | |
+| `select_row_on_context_menu` | `false` | |
+| `context_menu_items` | null | Items, or `fn(meta)`; `meta` is `{ target, field, header_name, row_idx, row_data, value }` |
+| `column_actions` | null | `{ field: { on_click(params), on_double_click(params), show_value_on_double_click } }` |
+| `action_column` | null | `{ field, header_name, buttons: [{ icon, title, on_click(row, params) }] }` |
+| `column_defs_override` | null | `{ field: ag_col_def }` |
+| `column_tooltips` | null | `{ field: text or fn(params) }` |
+| `default_col_def` | `{ resizable: true, sortable: true, filter: false }` | |
+| `autosize_columns` | `true` | Fit to content; false stretches to width |
+| `loading_text` | `'Loading data...'` | |
+| `empty_state_message` | `'No data to display'` | |
+| `grid_options` | `{}` | Extra AG Grid options |
+| `filter_popup` | `{ apply_text: 'Apply' }` | |
+| `inject_default_css` | `true` | |
+| `custom_css` | null | |
+| `theme` | null | AG Grid theme object, or `'legacy'` to load the engine CSS |
+| `ag_grid_cdn` | jsDelivr ag-grid-community 31.3.4 | Set to a local file for offline use |
+
+Registry options: `data` (demo rows), `column_order`, the `enable_*` flags, `autosize_columns`, `empty_state_message`, `loading_text`. Registry sets host height to 300 px if unset.
+
+## Methods
+
+| Method | Notes |
+|---|---|
+| `update()` / `refresh()` | Re-fetch through `fetch_data`, keep filters |
+| `set_data(rows, column_order)` | Replace rows without fetching |
+| `apply_search(term)`, `clear_search_box()`, `get_search_box_value()` | |
+| `apply_filters()`, `clear_filters()` | |
+| `save()` | Export through `on_save` |
+| `get_grid_api()` | AG Grid API, or null before ready |
+| `set_theme(theme)` | |
+| `destroy()` | |
+
+Rows with an `id` field use it as the row id.
+
+## Example
+
+```js
+let table = new Table('#grid', {
+    enable_search: true,
+    fetch_data: async () => ({ data: await pywebview.api.get_rows() }),
+    on_save: async rows => ({ blob: new Blob([JSON.stringify(rows)]), filename: 'rows.json' })
+});
+```
+
+## Selection and edit mode
+
+Both are off by default, so existing tables behave as before.
+
+- `enable_selection` (bool): adds a pinned checkbox column with a select-all header box.
+- `enable_edit` (bool): adds an Edit button; click it to turn cell editing on or off.
+- `edit_on_start` (bool): starts with editing on.
+- `on_selection_change(rows)`: called with the selected row objects.
+- `on_cell_edit({ row, field, old_value, new_value })`: called after a cell edit.
+- Methods: `get_selected_rows()`, `select_all()`, `clear_selection()`, `set_edit_mode(on)`, `is_edit_mode()`.
+
+## Per-column editors
+
+With `enable_edit` on, `column_editors` maps a field to an editor spec. Fields without a spec use the plain text editor.
+
+```js
+column_editors: {
+    id:     { type: 'readonly' },
+    name:   { type: 'text', required: true, max_length: 24 },
+    score:  { type: 'int', min: 0, max: 100 },
+    price:  { type: 'number', min: 0 },
+    status: { type: 'select', choices: ['active', 'paused', 'failed'] },
+    owner:  { type: 'autocomplete', choices: ['Jane', 'Sam'], allow_free_text: false },
+    active: { type: 'bool' },
+    code:   { type: 'text', validate: (value, row) => value.startsWith('X') || 'Must start with X' }
+}
+```
+
+- Types: `text`, `int`, `number`, `bool` (checkbox that changes only in edit mode), `select` (drop-down), `autocomplete` (AutoComplete widget), `readonly`.
+- Rules: `required`, `min`, `max`, `max_length`, and `validate(value, row)` which returns true or an error text.
+- A rejected value leaves the cell unchanged and calls `on_edit_rejected({ row, field, value, reason })`.
+- Accepted values are stored in the row as the right type (numbers, booleans).
+
+---
+
+<!-- reference: TickerBanner -->
+
+# TickerBanner
+
+File: `web/js/widgets/TickerBanner/TickerBanner.js`. Tag: `ticker_banner`. Global: `window.TickerBanner`.
+
+Slim notification bar that scrolls messages like a news ticker. Dismissing it leaves a restore strip. Hover shows all messages in a hint; right-click pins the hint.
+
+## Constructor
+
+`new TickerBanner(container, config)`. Call `render()` to build; it returns the instance.
+
+| Option | Default | Notes |
+|---|---|---|
+| `severity` | `'warning'` | `'info'`, `'warning'` or `'error'` |
+| `on_right_click` | null | `on_right_click(messages, event)` |
+| `actions` | `[]` | `[{ label, icon (HTML), title, on_click(event, banner) }]` buttons |
+
+Registry options: `severity: 'warning'`, `messages` (demo list).
+
+## Members
+
+Methods return the instance.
+
+| Member | Notes |
+|---|---|
+| `render()` | |
+| `show(messages)` | A string or a list; empty acts like `hide()` |
+| `hide()` | Clears messages |
+| `dismiss()` | Hides the bar and shows the restore strip |
+| `restore()` | Brings the bar back |
+| `is_visible`, `messages` | Getters |
+| `set_theme(theme)` | |
+
+## Example
+
+```js
+let banner = new TickerBanner(document.getElementById('top'), {
+    severity: 'error', actions: [{ label: 'Retry', on_click: () => reconnect() }]
+}).render();
+banner.show(['Connection lost', 'Retrying in 5 s']);
+```
+
+---
+
+<!-- reference: ToggleSwitch -->
+
+# ToggleSwitch
+
+File: `web/js/widgets/ToggleSwitch/ToggleSwitch.js`. Tag: `toggle_switch`. Global: `window.ToggleSwitch`.
+
+## Constructor
+
+`new ToggleSwitch(parent, options)`. Builds at once and appends to `parent` when given.
+
+| Option | Default | Notes |
+|---|---|---|
+| `label` | `''` | Text beside the switch |
+| `checked` | `false` | Initial state |
+| `disabled` | `false` | |
+| `id` | none | Set on the inner checkbox |
+| `title` | none | Tooltip on the root |
+| `on_change` | null | `on_change(is_on)` on user toggles |
+
+Registry defaults: `label: 'Enabled'`, `checked: false`, `disabled: false`, `title: ''`.
+
+## Members
+
+| Member | Notes |
+|---|---|
+| `value` | Getter: current boolean |
+| `element` | Getter: root `label` element |
+| `set_value(val)` | Sets state without firing `on_change` |
+| `set_label(text)` | |
+| `set_disabled(val)` | |
+| `set_theme(theme)` | Preset name or variables object |
+
+## Example
+
+```js
+let sw = new ToggleSwitch(document.getElementById('opts'), {
+    label: 'Dark mode', on_change: on => set_app_theme(on ? 'dark' : 'light')
+});
+```
+
+---
+
+<!-- reference: UserPrompt -->
+
+# UserPrompt
+
+File: `web/js/widgets/UserPrompt/UserPrompt.js`. Tag: `user_prompt`. Globals: `UserPrompt`, `UserPromptInput`, `UserPromptPassword`.
+
+Modal question with up to four buttons and an optional auto-answer countdown. Custom elements `user-prompt`, `user-prompt-input` and `user-prompt-password`.
+
+| Class | Field | Default timeout |
+|---|---|---|
+| `UserPrompt` | none | 60 s |
+| `UserPromptInput` | text input | 0 (none) |
+| `UserPromptPassword` | password input with show/hide | 0 (none) |
+
+## Usage
+
+`await UserPrompt.ask(config)` opens a prompt of the calling class and resolves with the answer. It never rejects. You can also append `new UserPrompt(config)` to the document.
+
+| Config | Default | Notes |
+|---|---|---|
+| `title` | `''` | |
+| `text` | `''` | HTML body |
+| `options` | `{ Yes: true, No: false }` | `{ label: value }` map, first four used. An array throws |
+| `timeout` | class default | Seconds; `0` disables |
+| `default_value` | `null` | Value on timeout |
+| `on_answer` | null | `on_answer(value, label)`; `label` is null on timeout or when replaced |
+| `input_placeholder` | `''` | Input variants |
+| `input_default` | `''` | Input variants |
+
+Answer value: the option value for plain prompts; the typed text for input variants, whichever button is pressed. Use `on_answer(value, label)` to tell the buttons apart.
+
+Keys: arrows move between buttons, Enter activates, Escape picks the last button. Enter in the input picks the first button. Opening a prompt answers any other open prompt with null.
+
+`set_theme(theme)` themes one prompt element.
+
+Registry options: `variant` (`question`, `input`, `password`), `button_label`, `title`, `text`, `options`, `timeout`, `input_placeholder`. The tag builds a launcher button; the instance is that button.
+
+## Example
+
+```js
+let ok = await UserPrompt.ask({ title: 'Delete', text: 'Delete <b>3</b> files?', allow_html: true, options: { Delete: true, Cancel: false } });
+let name = await UserPromptInput.ask({ title: 'Rename', options: { OK: 'ok', Cancel: 'cancel' }, input_default: 'report' });
+```
+
+`text` is plain text by default. Set `allow_html: true` to allow simple formatting; scripts and event attributes are always removed.
+
+## Close button
+
+Every prompt shows a small x at the top right. It answers like No or Cancel: the value of an option labelled No or Cancel, or null when there is none. Input and password prompts return null. Escape still picks the last button. Set `closable: false` to hide the x.

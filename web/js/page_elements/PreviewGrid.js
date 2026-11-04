@@ -11,49 +11,29 @@ class PreviewGrid {
 
     build(parent, row, col, colSpan, sticky, margin) {
         let wrapper = document.createElement('div');
-        wrapper.style.display = 'flex';
-        wrapper.style.flexDirection = 'column';
-        wrapper.style.gap = '8px';
+        wrapper.className = 'tester_preview_wrapper';
 
         this.header = document.createElement('div');
-        this.header.style.display = 'flex';
-        this.header.style.justifyContent = 'space-between';
-        this.header.style.alignItems = 'center';
+        this.header.className = 'tester_panel_header';
 
         let title = document.createElement('span');
         title.textContent = 'Preview Area';
-        title.style.fontWeight = 'bold';
-        title.style.fontSize = '14px';
+        title.className = 'tester_panel_title';
 
         let button_container = document.createElement('div');
-        button_container.style.display = 'flex';
-        button_container.style.gap = '8px';
+        button_container.className = 'tester_action_buttons';
 
         this.css_btn = document.createElement('button');
-        this.css_btn.innerHTML = '🎨';
+        this.css_btn.textContent = 'CSS';
         this.css_btn.title = 'Edit Preview CSS (background, borders, etc.)';
-        this.css_btn.style.background = 'none';
-        this.css_btn.style.border = 'none';
-        this.css_btn.style.fontSize = '20px';
-        this.css_btn.style.cursor = 'pointer';
-        this.css_btn.style.padding = '4px 8px';
-        this.css_btn.style.borderRadius = '4px';
-        this.css_btn.onmouseover = () => { this.css_btn.style.backgroundColor = '#e0e0e0'; };
-        this.css_btn.onmouseout = () => { this.css_btn.style.backgroundColor = 'transparent'; };
+        this.css_btn.className = 'tester_button tester_button_secondary tester_button_small';
         this.css_btn.onclick = () => this.controller.open_css_editor();
 
         this.clear_css_btn = document.createElement('button');
-        this.clear_css_btn.innerHTML = '🗑️';
+        this.clear_css_btn.textContent = 'Reset';
         this.clear_css_btn.title = 'Clear Preview CSS';
-        this.clear_css_btn.style.background = 'none';
-        this.clear_css_btn.style.border = 'none';
-        this.clear_css_btn.style.fontSize = '20px';
-        this.clear_css_btn.style.cursor = 'pointer';
-        this.clear_css_btn.style.padding = '4px 8px';
-        this.clear_css_btn.style.borderRadius = '4px';
+        this.clear_css_btn.className = 'tester_button tester_button_secondary tester_button_small';
         this.clear_css_btn.style.display = 'none';
-        this.clear_css_btn.onmouseover = () => { this.clear_css_btn.style.backgroundColor = '#e0e0e0'; };
-        this.clear_css_btn.onmouseout = () => { this.clear_css_btn.style.backgroundColor = 'transparent'; };
         this.clear_css_btn.onclick = () => this.clear_css();
 
         button_container.appendChild(this.css_btn);
@@ -74,13 +54,39 @@ class PreviewGrid {
         });
 
         parent.appendChild(wrapper);
-        wrapper.style.flex = '1';
-        wrapper.style.display = 'flex';
-        wrapper.style.flexDirection = 'column';
         this.element.style.flex = '1';
+        this.element.addEventListener('click', event => this.select_from_event(event));
 
         // Load saved CSS
         this.load_css_from_storage();
+    }
+
+    /**
+     * Finds the widget under a click and opens it in the editor.
+     */
+    select_from_event(event) {
+        let node = event.target;
+        while (node && node !== this.element) {
+            if (node.id && this.controller.get_widget(node.id)) {
+                this.controller.edit_object(node.id);
+                return;
+            }
+            node = node.parentElement;
+        }
+    }
+
+    /**
+     * Outlines the widget with this id in the preview and clears the outline of the others.
+     */
+    mark_selected(widget_id) {
+        this.selected_id = widget_id;
+        for (let el of this.element.querySelectorAll('.tester_preview_selected')) {
+            el.classList.remove('tester_preview_selected');
+        }
+        let target = widget_id ? document.getElementById(widget_id) : null;
+        if (target) {
+            target.classList.add('tester_preview_selected');
+        }
     }
 
     get_element() {
@@ -192,6 +198,7 @@ class PreviewGrid {
 
     update_widget(widget) {
         let old_element = document.getElementById(widget.id);
+        setTimeout(() => this.mark_selected(this.selected_id), 0);
         if (!old_element) {
             this.rebuild(this.controller.widgets);
             return;

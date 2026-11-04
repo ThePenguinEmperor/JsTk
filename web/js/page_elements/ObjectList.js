@@ -105,7 +105,8 @@ class ObjectList {
                 },
                 {
                     id: `list_section_${widget.id}`,
-                    class_name: 'object_list_collapsible'
+                    class_name: 'object_list_collapsible',
+                    full_width: true
                 }
             );
             section.build(parent_element);

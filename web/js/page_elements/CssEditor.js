@@ -1,4 +1,8 @@
-// #region constructor_and_helpers
+// #region css_editor
+/**
+ * CssEditor - modal editor for CSS properties with live preview.
+ * @param {Object} controller - reference to main controller (for dev_mode, etc.)
+ */
 class CssEditor {
     constructor(controller) {
         this.controller = controller;
@@ -15,7 +19,7 @@ class CssEditor {
     /**
      * Open the CSS editor for a target element.
      * @param {HTMLElement} target_element - The element to edit CSS for.
-     * @param {Function} on_save - Callback called when CSS is applied (receives css_updates object).
+     * @param {Function} on_save - Callback when CSS is applied (receives css_updates object).
      */
     open(target_element, on_save = null) {
         this.target_element = target_element;
@@ -27,8 +31,7 @@ class CssEditor {
         this.live_preview_element.style.position = 'relative';
         this.live_preview_element.style.margin = '10px 0';
         this.live_preview_element.style.padding = '10px';
-        this.live_preview_element.style.border = '2px solid #ccc';
-        this.live_preview_element.style.backgroundColor = '#f9f9f9';
+        this.live_preview_element.classList.add('css_live_preview');
 
         if (!this.popup) {
             this.create_popup();
@@ -40,84 +43,112 @@ class CssEditor {
 
     /**
      * Create the popup overlay with CSS editor content.
+     * Pass size options (width: 700, height: 1200) as base size.
+     * The PopupOverlay will treat these as min sizes if they fit within 90%/85% limits.
      */
     create_popup() {
-        let self = this;
+        const self = this;
         this.popup = new PopupOverlay(
-            function(container) {
-                self.build_editor_content(container);
-            },
-            function() {
+            (container) => self.build_editor_content(container),
+            { width: 700, height: 1200 },   // base size in pixels
+            () => {
                 self.target_element = null;
                 self.live_preview_element = null;
                 self.save_callback = null;
             }
         );
     }
-// #endregion
 
-// #region editor_content
+    // #region editor_content
+    /**
+     * Build the entire editor UI.
+     * @param {HTMLElement} container - The popup content container.
+     */
     build_editor_content(container) {
-        let title = document.createElement('h3');
+        // Title
+        container.classList.add('css_editor');
+        const title = document.createElement('h3');
         title.textContent = 'CSS Editor';
-        title.style.marginBottom = '10px';
+        title.className = 'css_editor_title';
         container.appendChild(title);
+        const intro = document.createElement('p');
+        intro.className = 'css_editor_intro';
+        intro.textContent = 'Change how the selected widget looks. Open a group, set a value and watch the preview update. Leave a field empty to keep the default. Nothing is saved until you press Apply.';
+        container.appendChild(intro);
 
-        let preview_label = document.createElement('div');
-        preview_label.textContent = 'Live Preview (clone of target):';
-        preview_label.style.fontWeight = 'bold';
-        preview_label.style.marginTop = '10px';
+        const preview_label = document.createElement('div');
+        preview_label.textContent = 'Preview';
+        preview_label.className = 'css_editor_label';
         container.appendChild(preview_label);
+        const preview_note = document.createElement('p');
+        preview_note.className = 'css_editor_note';
+        preview_note.textContent = 'A copy of the widget. Changes show here first.';
+        container.appendChild(preview_note);
         container.appendChild(this.live_preview_element);
 
-        let content = document.createElement('div');
-        content.style.maxHeight = '500px';
-        content.style.overflowY = 'auto';
-        content.style.marginTop = '10px';
+        // Scrollable content area for property sections
+        const content_wrapper = document.createElement('div');
+        content_wrapper.style.maxHeight = 'calc(100% - 200px)'; // leave room for title and buttons
+        content_wrapper.style.overflowY = 'auto';
+        content_wrapper.style.marginTop = '10px';
 
         this.property_groups = this.get_property_groups();
-        for (let group_name in this.property_groups) {
-            this.build_collapsible_section(content, group_name, this.property_groups[group_name]);
+        for (const group_name in this.property_groups) {
+            this.build_collapsible_section(content_wrapper, group_name, this.property_groups[group_name]);
         }
 
-        let custom_section = document.createElement('div');
-        custom_section.style.marginTop = '20px';
-        custom_section.style.borderTop = '1px solid #ccc';
-        custom_section.style.paddingTop = '10px';
-        let custom_label = document.createElement('div');
+        // Custom CSS section
+        const custom_section = document.createElement('div');
+        custom_section.className = 'css_custom_section';
+        const custom_label = document.createElement('div');
         custom_label.textContent = 'Custom CSS (raw)';
-        custom_label.style.fontWeight = 'bold';
+        custom_label.className = 'css_editor_label';
         custom_section.appendChild(custom_label);
+        const custom_note = document.createElement('p');
+        custom_note.className = 'css_editor_note';
+        custom_note.textContent = 'Write any other declarations, one per line, for example: box-shadow: 0 2px 6px #0004;';
+        custom_section.appendChild(custom_note);
 
         this.custom_css_textarea = document.createElement('textarea');
-        this.custom_css_textarea.style.width = '100%';
-        this.custom_css_textarea.style.height = '100px';
-        this.custom_css_textarea.style.fontFamily = 'monospace';
-        this.custom_css_textarea.style.fontSize = '12px';
+        this.custom_css_textarea.className = 'css_custom_textarea';
+        this.custom_css_textarea.placeholder = 'property: value;';
         custom_section.appendChild(this.custom_css_textarea);
-        content.appendChild(custom_section);
+        content_wrapper.appendChild(custom_section);
 
-        let button_row = document.createElement('div');
-        button_row.style.marginTop = '20px';
-        button_row.style.display = 'flex';
-        button_row.style.gap = '10px';
-        button_row.style.justifyContent = 'flex-end';
+        // Buttons row
+        const button_row = document.createElement('div');
+        button_row.className = 'css_editor_buttons';
 
-        let apply_btn = document.createElement('button');
+        const apply_btn = document.createElement('button');
         apply_btn.textContent = 'Apply';
         apply_btn.className = 'tester_button';
         apply_btn.onclick = () => this.apply_changes();
 
-        let cancel_btn = document.createElement('button');
+        const cancel_btn = document.createElement('button');
         cancel_btn.textContent = 'Cancel';
         cancel_btn.className = 'tester_button tester_button_secondary';
         cancel_btn.onclick = () => this.popup.close();
 
         button_row.appendChild(apply_btn);
         button_row.appendChild(cancel_btn);
+        content_wrapper.appendChild(button_row);
 
-        content.appendChild(button_row);
-        container.appendChild(content);
+        container.appendChild(content_wrapper);
+    }
+
+    /**
+     * Returns the property groups definition.
+     */
+    get_group_notes() {
+        return {
+            'Layout': 'How the widget arranges itself and its children: display mode, flex and grid settings, gaps.',
+            'Dimensions': 'Size, margins (space outside) and padding (space inside).',
+            'Colors': 'Background and text colour, and transparency.',
+            'Borders': 'Border lines, rounded corners and outline.',
+            'Typography': 'Font, size, weight, alignment and spacing of text.',
+            'Effects': 'Shadows, transitions, animations, filters and the mouse cursor.',
+            'Z-index': 'Stacking order: higher numbers sit in front.'
+        };
     }
 
     get_property_groups() {
@@ -190,56 +221,56 @@ class CssEditor {
         };
     }
 
+    /**
+     * Build a collapsible section for a property group.
+     * @param {HTMLElement} parent - Parent container.
+     * @param {string} title - Section title.
+     * @param {Object} properties - Map of property definitions.
+     */
     build_collapsible_section(parent, title, properties) {
-        let section = document.createElement('div');
-        section.style.marginBottom = '10px';
-        section.style.border = '1px solid #ddd';
-        section.style.borderRadius = '4px';
+        const section = document.createElement('div');
+        section.className = 'css_group';
 
-        let header = document.createElement('div');
-        header.style.backgroundColor = '#f0f0f0';
-        header.style.padding = '8px';
-        header.style.cursor = 'pointer';
-        header.style.display = 'flex';
-        header.style.alignItems = 'center';
-        header.style.gap = '8px';
+        const header = document.createElement('div');
+        header.className = 'css_group_header';
 
-        let icon = document.createElement('span');
-        icon.textContent = '▶';
-        icon.style.fontSize = '12px';
-        icon.style.transition = 'transform 0.2s';
+        const icon = document.createElement('span');
+        icon.textContent = '>';
+        icon.className = 'css_group_icon';
 
-        let title_span = document.createElement('span');
+        const title_span = document.createElement('span');
         title_span.textContent = title;
-        title_span.style.fontWeight = 'bold';
+        title_span.className = 'css_group_title';
 
-        let indicator = document.createElement('span');
-        indicator.style.marginLeft = 'auto';
-        indicator.style.fontSize = '12px';
-        indicator.style.color = 'green';
+        const note_span = document.createElement('span');
+        note_span.textContent = this.get_group_notes()[title] || '';
+        note_span.className = 'css_group_note';
+
+        const indicator = document.createElement('span');
+        indicator.className = 'css_group_indicator';
         indicator.style.display = 'none';
-        indicator.innerHTML = '●';
+        indicator.textContent = 'in use';
         indicator.title = 'Active CSS in this section';
 
         header.appendChild(icon);
         header.appendChild(title_span);
+        header.appendChild(note_span);
         header.appendChild(indicator);
 
-        let content = document.createElement('div');
-        content.style.padding = '10px';
+        const content = document.createElement('div');
+        content.className = 'css_group_content';
         content.style.display = 'none';
-        content.style.borderTop = '1px solid #ddd';
 
-        for (let prop_name in properties) {
-            let prop_def = properties[prop_name];
-            let row = this.build_property_row(prop_name, prop_def);
+        for (const prop_name in properties) {
+            const prop_def = properties[prop_name];
+            const row = this.build_property_row(prop_name, prop_def);
             content.appendChild(row);
         }
 
         header.onclick = () => {
-            let is_open = content.style.display !== 'none';
+            const is_open = content.style.display !== 'none';
             content.style.display = is_open ? 'none' : 'block';
-            icon.textContent = is_open ? '▶' : '▼';
+            icon.textContent = is_open ? '>' : 'v';
         };
 
         section.appendChild(header);
@@ -249,22 +280,22 @@ class CssEditor {
         this.section_headers[title] = { indicator, properties: Object.keys(properties) };
     }
 
+    /**
+     * Build a single property row (label + input + optional unit select).
+     * @param {string} prop_name - CSS property name.
+     * @param {Object} def - Property definition.
+     * @returns {HTMLElement} The row element.
+     */
     build_property_row(prop_name, def) {
-        let row = document.createElement('div');
-        row.style.display = 'flex';
-        row.style.alignItems = 'center';
-        row.style.gap = '8px';
-        row.style.marginBottom = '8px';
+        const row = document.createElement('div');
+        row.className = 'css_prop_row';
 
-        let label = document.createElement('label');
-        label.textContent = prop_name + ':';
-        label.style.width = '120px';
-        label.style.fontSize = '12px';
+        const label = document.createElement('label');
+        label.textContent = prop_name;
+        label.className = 'css_prop_label';
 
-        let input_wrapper = document.createElement('div');
-        input_wrapper.style.display = 'flex';
-        input_wrapper.style.gap = '4px';
-        input_wrapper.style.flex = '1';
+        const input_wrapper = document.createElement('div');
+        input_wrapper.className = 'css_prop_inputs';
 
         let input = null;
         let unit_select = null;
@@ -272,18 +303,18 @@ class CssEditor {
         if (def.type === 'select') {
             input = document.createElement('select');
             input.style.flex = '1';
-            let blank_option = document.createElement('option');
+            const blank_option = document.createElement('option');
             blank_option.value = '';
             blank_option.textContent = '(none)';
             input.appendChild(blank_option);
-            for (let opt of def.options) {
-                let option = document.createElement('option');
+            for (const opt of def.options) {
+                const option = document.createElement('option');
                 option.value = opt;
                 option.textContent = opt;
                 input.appendChild(option);
             }
-            let clear_btn = document.createElement('button');
-            clear_btn.textContent = '✕';
+            const clear_btn = document.createElement('button');
+            clear_btn.textContent = 'x';
             clear_btn.style.padding = '2px 6px';
             clear_btn.style.fontSize = '12px';
             clear_btn.style.cursor = 'pointer';
@@ -305,9 +336,9 @@ class CssEditor {
             input_wrapper.appendChild(input);
             if (def.unit !== undefined && def.unit !== '') {
                 unit_select = document.createElement('select');
-                let units = ['px', '%', 'em', 'rem', 'vw', 'vh'];
-                for (let u of units) {
-                    let opt = document.createElement('option');
+                const units = ['px', '%', 'em', 'rem', 'vw', 'vh'];
+                for (const u of units) {
+                    const opt = document.createElement('option');
                     opt.value = u;
                     opt.textContent = u;
                     if (u === def.unit) opt.selected = true;
@@ -321,10 +352,10 @@ class CssEditor {
             input.style.flex = '1';
             input_wrapper.appendChild(input);
             if (def.unit) {
-                let unit_hint = document.createElement('span');
+                const unit_hint = document.createElement('span');
                 unit_hint.textContent = def.unit;
                 unit_hint.style.fontSize = '12px';
-                unit_hint.style.color = '#666';
+                unit_hint.className = 'css_editor_note';
                 input_wrapper.appendChild(unit_hint);
             }
         }
@@ -332,10 +363,10 @@ class CssEditor {
         row.appendChild(label);
         row.appendChild(input_wrapper);
 
-        // Store reference
+        // Store references
         this.css_inputs.set(prop_name, { input: input, unit_select: unit_select });
 
-        let update_func = () => {
+        const update_func = () => {
             let value = input.value;
             if (unit_select && value !== '') value += unit_select.value;
             this.update_live_preview(prop_name, value);
@@ -348,6 +379,11 @@ class CssEditor {
         return row;
     }
 
+    /**
+     * Update the live preview element with a property value.
+     * @param {string} prop - CSS property name (kebab-case).
+     * @param {string} value - CSS value.
+     */
     update_live_preview(prop, value) {
         if (this.live_preview_element) {
             if (value === '') {
@@ -358,12 +394,15 @@ class CssEditor {
         }
     }
 
+    /**
+     * Update the green indicator dot for each collapsible section.
+     */
     update_section_indicator() {
-        for (let section_name in this.section_headers) {
-            let section = this.section_headers[section_name];
+        for (const section_name in this.section_headers) {
+            const section = this.section_headers[section_name];
             let has_active = false;
-            for (let prop of section.properties) {
-                let entry = this.css_inputs.get(prop);
+            for (const prop of section.properties) {
+                const entry = this.css_inputs.get(prop);
                 if (entry && entry.input && entry.input.value !== '') {
                     has_active = true;
                     break;
@@ -373,32 +412,40 @@ class CssEditor {
         }
     }
 
+    /**
+     * Convert kebab-case to camelCase.
+     * @param {string} str - Kebab-case string.
+     * @returns {string} CamelCase string.
+     */
     camelize(str) {
         return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
     }
-// #endregion
+    // #endregion
 
-// #region style_management
+    // #region style_management
+    /**
+     * Load current styles from target element into the editor.
+     */
     load_current_styles() {
         if (!this.target_element) return;
-        let computed = window.getComputedStyle(this.target_element);
-        for (let [prop, entry] of this.css_inputs.entries()) {
-            let input = entry.input;
-            let unit_select = entry.unit_select;
+        const computed = window.getComputedStyle(this.target_element);
+        for (const [prop, entry] of this.css_inputs.entries()) {
+            const input = entry.input;
+            const unit_select = entry.unit_select;
             if (!input) continue;
             let value = computed.getPropertyValue(prop);
             if (value) {
-                let match = value.match(/^([\d.-]+)(.*)$/);
+                const match = value.match(/^([\d.-]+)(.*)$/);
                 if (match && unit_select) {
                     input.value = match[1];
-                    let unit = match[2].trim();
+                    const unit = match[2].trim();
                     if (unit_select.querySelector(`option[value="${unit}"]`)) {
                         unit_select.value = unit;
                     }
                 } else if (input.type === 'color') {
-                    let rgb = value.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+                    const rgb = value.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
                     if (rgb) {
-                        let hex = '#' + ((1 << 24) + (parseInt(rgb[1]) << 16) + (parseInt(rgb[2]) << 8) + parseInt(rgb[3])).toString(16).slice(1);
+                        const hex = '#' + ((1 << 24) + (parseInt(rgb[1]) << 16) + (parseInt(rgb[2]) << 8) + parseInt(rgb[3])).toString(16).slice(1);
                         input.value = hex;
                     } else {
                         input.value = value;
@@ -409,7 +456,7 @@ class CssEditor {
             }
         }
         if (this.custom_css_textarea) {
-            let inline_style = this.target_element.getAttribute('style') || '';
+            const inline_style = this.target_element.getAttribute('style') || '';
             this.custom_css_textarea.value = inline_style;
         }
         if (this.live_preview_element) {
@@ -418,11 +465,15 @@ class CssEditor {
         this.update_section_indicator();
     }
 
+    /**
+     * Collect all CSS updates from the editor.
+     * @returns {Object} Map of property -> value.
+     */
     collect_css_updates() {
-        let updates = {};
-        for (let [prop, entry] of this.css_inputs.entries()) {
-            let input = entry.input;
-            let unit_select = entry.unit_select;
+        const updates = {};
+        for (const [prop, entry] of this.css_inputs.entries()) {
+            const input = entry.input;
+            const unit_select = entry.unit_select;
             if (!input) continue;
             let value = input.value;
             if (value !== '') {
@@ -431,13 +482,13 @@ class CssEditor {
             }
         }
         if (this.custom_css_textarea && this.custom_css_textarea.value.trim()) {
-            let lines = this.custom_css_textarea.value.split('\n');
-            for (let line of lines) {
-                line = line.trim();
-                if (line && line.indexOf(':') !== -1) {
-                    let parts = line.split(':');
-                    let prop = parts[0].trim();
-                    let val = parts.slice(1).join(':').trim().replace(/;$/, '');
+            const lines = this.custom_css_textarea.value.split('\n');
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (trimmed && trimmed.indexOf(':') !== -1) {
+                    const parts = trimmed.split(':');
+                    const prop = parts[0].trim();
+                    const val = parts.slice(1).join(':').trim().replace(/;$/, '');
                     if (prop && val) updates[prop] = val;
                 }
             }
@@ -445,13 +496,16 @@ class CssEditor {
         return updates;
     }
 
+    /**
+     * Apply the collected CSS changes to the target element and call save callback.
+     */
     apply_changes() {
         if (!this.target_element) {
             this.popup.close();
             return;
         }
-        let updates = this.collect_css_updates();
-        for (let prop in updates) {
+        const updates = this.collect_css_updates();
+        for (const prop in updates) {
             this.target_element.style[this.camelize(prop)] = updates[prop];
         }
         if (this.save_callback) {
@@ -461,13 +515,20 @@ class CssEditor {
         this.popup.close();
     }
 
+    /**
+     * Show a message using MessageBox if available, else alert.
+     * @param {string} text - Message text.
+     * @param {string} type - 'success', 'warning', 'error'.
+     */
     show_message(text, type) {
         if (window.MessageBox) {
-            let msg = new MessageBox({ text: text, type: type, timeout: 2000 });
+            const msg = new MessageBox({ text: text, type: type, timeout: 2000 });
             msg.show();
         } else {
             alert(text);
         }
     }
-// #endregion
+    // #endregion
 }
+window.CssEditor = CssEditor;
+// #endregion css_editor

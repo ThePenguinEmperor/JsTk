@@ -1,0 +1,39 @@
+# jinker
+
+> jinker is a plain JavaScript UI library for browser pages and pywebview frontends. document.oc places elements in CSS grids like Tkinter grid(); the same call builds ready-made widgets by tag.
+
+Load the library with one script tag: web/js/Jinker.js (not async, not defer).
+
+Everything in one file: https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/llms-full.txt
+
+## Guide
+
+- [SKILL.md](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/SKILL.md): quick start, document.oc essentials, widget list
+
+## References
+
+- [AnimatedGifButton](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/AnimatedGifButton.md)
+- [AppStore](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/AppStore.md)
+- [AutoComplete](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/AutoComplete.md)
+- [Changelog](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/Changelog.md)
+- [CollapsibleSection](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/CollapsibleSection.md)
+- [ContextMenu](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/ContextMenu.md)
+- [DockWorkspace](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/DockWorkspace.md)
+- [DynamicFilter](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/DynamicFilter.md)
+- [GuidedTour](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/GuidedTour.md)
+- [HintPopup](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/HintPopup.md)
+- [InputWithClr](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/InputWithClr.md)
+- [IterableEditor](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/IterableEditor.md)
+- [ListSelector](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/ListSelector.md)
+- [MessageBox](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/MessageBox.md)
+- [ObjectCreator](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/ObjectCreator.md)
+- [OutputLogger](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/OutputLogger.md)
+- [PopupOverlay](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/PopupOverlay.md)
+- [ProgressBar](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/ProgressBar.md)
+- [QueueTray](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/QueueTray.md)
+- [SplitPane](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/SplitPane.md)
+- [TabbedContainer](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/TabbedContainer.md)
+- [Table](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/Table.md)
+- [TickerBanner](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/TickerBanner.md)
+- [ToggleSwitch](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/ToggleSwitch.md)
+- [UserPrompt](https://cdn.jsdelivr.net/gh/ThePenguinEmperor/JsTk@main/skills/jinker/references/UserPrompt.md)

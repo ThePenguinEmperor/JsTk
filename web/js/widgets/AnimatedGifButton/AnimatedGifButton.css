@@ -1,0 +1,30 @@
+/* #region animated_gif_button */
+.animated_gif_btn {
+    /* Layout */
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    /* Dimensions */
+    min-width: 32px;
+    min-height: 32px;
+    padding: 4px;
+    /* Colors */
+    background: var(--animated_btn_bg, transparent);
+    /* Borders */
+    border: none;
+    border-radius: var(--radius_btn, 6px);
+    /* Effects */
+    box-shadow: none;
+}
+
+.animated_gif_img {
+    /* Layout */
+    display: block;
+    pointer-events: none;
+    /* Dimensions */
+    width: auto;
+    height: 32px;
+}
+/* #endregion */

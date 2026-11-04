@@ -10,6 +10,8 @@ class CodeDisplay {
         this.clear_btn = null;
         this.fullscreen_btn = null;
         this.storage_key = 'jstk_last_code';   // localStorage key
+        this.import_btn = null;
+        this.save_timer = null;
     }
 
     build(parent, row, col, colSpan, sticky, margin) {
@@ -104,8 +106,20 @@ class CodeDisplay {
             events: { click: () => this.open_fullscreen_editor() }
         });
 
+        this.import_btn = document.oc.object_generate('button', {
+            parent: button_row,
+            row: 1,
+            col: 6,
+            text: 'Open File',
+            class_name: 'tester_button',
+            events: { click: () => this.open_from_file() }
+        });
+
+        this.code_textarea.spellcheck = false;
+        this.code_textarea.addEventListener('input', () => this.schedule_save());
+
         document.oc.configure_row(this.container, 2, { weight: 1 });
-        for (let i = 1; i <= 5; i++) {
+        for (let i = 1; i <= 6; i++) {
             document.oc.configure_column(button_row, i, { weight: 1 });
         }
 
@@ -118,7 +132,7 @@ class CodeDisplay {
     refresh(widgets) {
         let code_lines = [];
         for (let widget of widgets) {
-            let line = widget.get_command_string('parent_container');
+            let line = widget.get_command_string(this.controller.preview_grid_id);
             code_lines.push(line);
             code_lines.push('');
         }
@@ -131,7 +145,7 @@ class CodeDisplay {
 
     update_widget_line(widget) {
         let lines = this.code_textarea.value.split('\n');
-        let target_line = widget.get_command_string('parent_container');
+        let target_line = widget.get_command_string(this.controller.preview_grid_id);
         let found = false;
         for (let i = 0; i < lines.length; i++) {
             if (lines[i].includes(`id: '${widget.id}'`) || lines[i].includes(`id: "${widget.id}"`)) {
@@ -150,10 +164,50 @@ class CodeDisplay {
 // #endregion
 
 // #region code_operations
+    /**
+     * Copies the code with the async clipboard API and falls back to execCommand.
+     */
     copy_code() {
-        this.code_textarea.select();
-        document.execCommand('copy');
-        this.show_message('Code copied to clipboard!', 'success');
+        let code = this.code_textarea.value;
+        let on_done = () => this.show_message('Code copied to clipboard!', 'success');
+        let fallback = () => {
+            this.code_textarea.select();
+            document.execCommand('copy');
+            on_done();
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(code).then(on_done, fallback);
+            return;
+        }
+        fallback();
+    }
+
+    /**
+     * Reads a chosen .js or .txt file into the textarea and loads it.
+     */
+    open_from_file() {
+        let input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.js,.txt';
+        input.addEventListener('change', () => {
+            let file = input.files && input.files[0];
+            if (!file) {
+                return;
+            }
+            file.text().then(text => {
+                this.code_textarea.value = text;
+                this.load_from_textarea();
+            }, error => this.show_message('Could not read file: ' + error.message, 'error'));
+        });
+        input.click();
+    }
+
+    /**
+     * Saves the typed code after a short pause so typing stays fast.
+     */
+    schedule_save() {
+        clearTimeout(this.save_timer);
+        this.save_timer = setTimeout(() => this.save_to_storage(), 400);
     }
 
     save_to_file() {
@@ -162,7 +216,7 @@ class CodeDisplay {
         let url = URL.createObjectURL(blob);
         let a = document.createElement('a');
         a.href = url;
-        a.download = `jstk_layout_${new Date().toISOString().slice(0, 19)}.js`;
+        a.download = `jstk_layout_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.js`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -186,10 +240,11 @@ class CodeDisplay {
             function(container) {
                 let textarea = document.createElement('textarea');
                 textarea.value = self.code_textarea.value;
+                textarea.className = 'tester_code_area';
+                textarea.spellcheck = false;
                 textarea.style.width = '100%';
-                textarea.style.height = '400px';
-                textarea.style.fontFamily = 'monospace';
-                textarea.style.fontSize = '12px';
+                textarea.style.height = '65vh';
+                textarea.style.boxSizing = 'border-box';
 
                 let save_btn = document.createElement('button');
                 save_btn.textContent = 'Save & Apply';
@@ -214,6 +269,7 @@ class CodeDisplay {
                 container.appendChild(textarea);
                 container.appendChild(btn_row);
             },
+            { width: Math.floor(window.innerWidth * 0.88), height: Math.floor(window.innerHeight * 0.8) },
             function() {}
         );
         popup.open();
@@ -231,16 +287,34 @@ class CodeDisplay {
         return commands;
     }
 
+    /**
+     * Quotes a bare parent_container variable and makes sure the command ends with a semicolon.
+     */
     _preprocess_command(cmd) {
-        let modified = cmd.replace(/\bparent:\s*parent_container\b/g, "parent_id: 'tester_preview_grid'");
-        if (!modified.endsWith(';')) modified += ';';
+        let modified = cmd.replace(/\bparent:\s*parent_container\b/g, "parent: 'parent_container'");
+        if (!modified.endsWith(';')) {
+            modified += ';';
+        }
         return modified;
+    }
+
+    /**
+     * Turns a generated parent value into the tester parent_id.
+     */
+    _map_parent(params) {
+        let root_id = this.controller.preview_grid_id;
+        let is_root = !params.parent || params.parent === 'parent_container' || params.parent === root_id;
+        params.parent_id = params.parent_id || (is_root ? root_id : params.parent);
+        delete params.parent;
     }
 
     _validate_hierarchy(params_list) {
         let errors = [];
         let id_set = new Set();
         for (let p of params_list) {
+            if (p.id && id_set.has(p.id)) {
+                errors.push(`Duplicate id "${p.id}" found; every widget id must be unique.`);
+            }
             if (p.id) id_set.add(p.id);
         }
         for (let p of params_list) {
@@ -251,7 +325,7 @@ class CodeDisplay {
         return { valid: errors.length === 0, errors: errors };
     }
 
-    load_from_textarea() {
+    load_from_textarea(lenient = false) {
         let code = this.code_textarea.value;
         let commands = this._extract_commands(code);
         if (commands.length === 0) {
@@ -265,12 +339,16 @@ class CodeDisplay {
         for (let cmd of processed_commands) {
             let result = document.oc.validate_command_string(cmd);
             if (!result.valid) {
-                all_errors.push(...result.errors);
+                let snippet = cmd.length > 70 ? cmd.slice(0, 70) + '...' : cmd;
+                all_errors.push(...result.errors.map(error => error + ' [' + snippet + ']'));
             } else {
+                this._map_parent(result.params);
                 valid_params.push(result.params);
             }
         }
-        if (all_errors.length > 0) {
+        if (all_errors.length > 0 && lenient && valid_params.length > 0) {
+            this.show_message('Skipped ' + all_errors.length + ' invalid command(s):' + String.fromCharCode(10) + all_errors.join(String.fromCharCode(10)), 'warning', 10000);
+        } else if (all_errors.length > 0) {
             let error_msg = 'Validation errors:\n' + all_errors.join('\n');
             this.show_message(error_msg, 'error', 10000);
             return;
@@ -360,13 +438,15 @@ class CodeDisplay {
     load_from_storage() {
         try {
             let saved_code = localStorage.getItem(this.storage_key);
+            if (saved_code === null && typeof DefaultLayout !== 'undefined') {
+                saved_code = DefaultLayout.CODE;
+            }
             if (saved_code) {
                 this.code_textarea.value = saved_code;
                 if (this.controller.dev_mode) {
                     console.log('Loaded saved code from localStorage');
                 }
-                // Optionally auto-load the code to rebuild widgets
-                this.load_from_textarea();
+                this.load_from_textarea(true);
             }
         } catch (e) {
             console.warn('Failed to load code from localStorage:', e);

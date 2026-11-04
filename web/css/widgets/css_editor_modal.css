@@ -2,12 +2,9 @@
 /* Popup Overlay - already defined elsewhere, but we ensure its scroll panel styles */
 .popup_scroll_panel {
     overflow: auto;
-    background: var(--tester_color_bg_secondary, #fff);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-/* Main content container for CSS editor – fixed size, no overflow */
+/* Main content container for CSS editor - fixed size, no overflow */
 .css_editor_content {
     width: 700px;
     height: 1200px;
@@ -17,7 +14,7 @@
     overflow: visible;           /* no internal scroll */
 }
 
-/* Collapsible sections – no overflow */
+/* Collapsible sections - no overflow */
 .css_collapsible_header {
     cursor: pointer;
     padding: 8px;
@@ -33,7 +30,7 @@
     padding-left: 8px;
 }
 
-/* Property grid – responsive, no overflow */
+/* Property grid - responsive, no overflow */
 .css_property_grid {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -55,7 +52,7 @@
     border-radius: 4px;
 }
 
-/* Custom CSS textarea – let it grow, but no internal scroll (overflow visible) */
+/* Custom CSS textarea - let it grow, but no internal scroll (overflow visible) */
 .css_custom_textarea {
     width: 100%;
     min-height: 150px;
@@ -77,3 +74,227 @@
     justify-content: flex-end;
 }
 /* #endregion css_editor_modal */
+
+/* #region css_editor_theme */
+.css_editor {
+    /* Colors */
+    color: var(--tester_color_text_primary);
+    /* Typography */
+    font-family: var(--tester_font_family);
+    font-size: var(--tester_font_size_small);
+}
+
+.css_editor_title {
+    /* Typography */
+    font-size: 1.125rem;
+    font-weight: 800;
+}
+
+.css_editor_intro,
+.css_editor_note {
+    /* Colors */
+    color: var(--tester_color_text_secondary);
+    /* Typography */
+    line-height: 1.45;
+}
+
+.css_editor_intro {
+    /* Dimensions */
+    margin: 4px 0 12px;
+}
+
+.css_editor_note {
+    /* Dimensions */
+    margin: 0 0 6px;
+    /* Typography */
+    font-size: 0.75rem;
+}
+
+.css_editor_label {
+    /* Dimensions */
+    margin-top: 10px;
+    /* Colors */
+    color: var(--tester_color_accent);
+    /* Typography */
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.css_live_preview {
+    /* Colors */
+    background-color: var(--tester_color_bg_primary);
+    background-image: radial-gradient(color-mix(in srgb, var(--tester_color_accent) 22%, transparent) 1px, transparent 1px);
+    background-size: 16px 16px;
+    /* Borders */
+    border: 1px dashed var(--tester_color_border_strong);
+    border-radius: var(--tester_radius);
+}
+
+.css_group {
+    /* Dimensions */
+    margin-bottom: 8px;
+    /* Colors */
+    background-color: var(--tester_color_bg_secondary);
+    /* Borders */
+    border: 1px solid var(--tester_color_border);
+    border-radius: var(--tester_radius);
+    overflow: hidden;
+}
+
+.css_group_header {
+    /* Layout */
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    /* Dimensions */
+    padding: 8px 10px;
+    /* Colors */
+    background-color: var(--tester_color_bg_primary);
+    /* Effects */
+    cursor: pointer;
+    user-select: none;
+}
+
+.css_group_header:hover {
+    /* Colors */
+    background-color: var(--tester_color_bg_tertiary);
+}
+
+.css_group_icon {
+    /* Colors */
+    color: var(--tester_color_accent);
+    /* Typography */
+    font-family: var(--tester_font_mono);
+}
+
+.css_group_title {
+    /* Typography */
+    font-weight: 700;
+}
+
+.css_group_note {
+    /* Dimensions */
+    flex: 1;
+    min-width: 0;
+    /* Colors */
+    color: var(--tester_color_text_muted);
+    /* Typography */
+    font-size: 0.75rem;
+}
+
+.css_group_indicator {
+    /* Dimensions */
+    padding: 0 8px;
+    /* Colors */
+    background-color: var(--tester_color_accent_soft);
+    color: var(--tester_color_accent);
+    /* Borders */
+    border-radius: 10px;
+    /* Typography */
+    font-size: 0.6875rem;
+    font-weight: 700;
+}
+
+.css_group_content {
+    /* Dimensions */
+    padding: 10px;
+    /* Borders */
+    border-top: 1px solid var(--tester_color_border);
+}
+
+.css_prop_row {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Dimensions */
+    margin-bottom: 6px;
+}
+
+.css_prop_label {
+    /* Dimensions */
+    width: 140px;
+    flex-shrink: 0;
+    /* Colors */
+    color: var(--tester_color_text_secondary);
+    /* Typography */
+    font-family: var(--tester_font_mono);
+    font-size: 0.75rem;
+}
+
+.css_prop_inputs {
+    /* Layout */
+    display: flex;
+    gap: 4px;
+    /* Dimensions */
+    flex: 1;
+    min-width: 0;
+}
+
+.css_editor input:not([type="color"]),
+.css_editor select,
+.css_editor textarea {
+    /* Dimensions */
+    min-height: var(--tester_control_height);
+    padding: 3px 8px;
+    box-sizing: border-box;
+    /* Colors */
+    background-color: var(--tester_color_input_bg);
+    color: var(--tester_color_text_primary);
+    /* Borders */
+    border: 1px solid var(--tester_color_border);
+    border-radius: var(--tester_radius_sm);
+    /* Typography */
+    font-family: inherit;
+    font-size: var(--tester_font_size_small);
+}
+
+.css_editor input[type="color"] {
+    /* Dimensions */
+    height: var(--tester_control_height);
+    padding: 1px;
+    /* Colors */
+    background-color: var(--tester_color_input_bg);
+    /* Borders */
+    border: 1px solid var(--tester_color_border);
+    border-radius: var(--tester_radius_sm);
+}
+
+.css_editor input:focus,
+.css_editor select:focus,
+.css_editor textarea:focus {
+    /* Borders */
+    outline: none;
+    border-color: var(--tester_color_accent);
+    /* Effects */
+    box-shadow: 0 0 0 3px var(--tester_color_focus_ring);
+}
+
+.css_editor button:not(.tester_button) {
+    /* Dimensions */
+    padding: 2px 8px;
+    /* Colors */
+    background-color: var(--tester_color_input_bg);
+    color: var(--tester_color_text_secondary);
+    /* Borders */
+    border: 1px solid var(--tester_color_border);
+    border-radius: var(--tester_radius_sm);
+    /* Effects */
+    cursor: pointer;
+}
+
+.css_custom_section {
+    /* Dimensions */
+    margin-top: 16px;
+    padding-top: 6px;
+    /* Borders */
+    border-top: 1px solid var(--tester_color_border);
+}
+
+.css_custom_textarea {
+    /* Typography */
+    font-family: var(--tester_font_mono);
+}
+/* #endregion css_editor_theme */

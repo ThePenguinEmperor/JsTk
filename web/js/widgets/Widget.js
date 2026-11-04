@@ -8,8 +8,8 @@ class Widget {
      * @param {string} [params.id] - Unique ID; if omitted, a default is generated.
      * @param {string} [params.class_name] - CSS class name.
      * @param {string} [params.text] - Inner text content.
-     * @param {number} params.row - Grid row (1‑based).
-     * @param {number} params.col - Grid column (1‑based).
+     * @param {number} params.row - Grid row (1-based).
+     * @param {number} params.col - Grid column (1-based).
      * @param {number} [params.row_span] - Row span.
      * @param {number} [params.col_span] - Column span.
      * @param {string} [params.sticky] - Sticky directions ('n', 's', 'e', 'w').
@@ -18,7 +18,7 @@ class Widget {
      * @param {number} [params.ipadx] - Horizontal padding (px).
      * @param {number} [params.ipady] - Vertical padding (px).
      * @param {string} params.parent_id - ID of the parent container element.
-     * @param {Object} [params.css] - CSS style overrides (non‑default).
+     * @param {Object} [params.css] - CSS style overrides (non-default).
      */
     constructor(params) {
         this.tag = params.tag;
@@ -76,6 +76,10 @@ class Widget {
      * @returns {boolean} True if the widget can contain children.
      */
     is_container() {
+        let entry = window.WidgetRegistry ? WidgetRegistry.get(this.tag) : null;
+        if (entry) {
+            return entry.container;
+        }
         let container_tags = ['div', 'collapsible_section', 'popup_overlay'];
         for (let i = 0; i < container_tags.length; i++) {
             if (this.tag === container_tags[i]) {
@@ -151,6 +155,7 @@ class Widget {
         for (let key in this.extra_attributes) {
             params[key] = this.extra_attributes[key];
         }
+        params.parent = parent_element;
 
         if (Object.keys(this.css).length > 0) {
             params.style = this.css;
@@ -168,7 +173,7 @@ class Widget {
         // Default: use object_generate
         let element = document.oc.object_generate(this.tag, params);
         this.element = element;
-        this.content_container = element;
+        this.content_container = element.content_container || element;
         return element;
     }
 
@@ -193,8 +198,9 @@ class Widget {
         let self = this;
         let content_container_div = null;
 
+        let section_options = this.extra_attributes.options || {};
         let section = new CollapsibleSection(
-            this.text || 'Section',
+            section_options.title || this.text || 'Section',
             function(container) {
                 content_container_div = document.createElement('div');
                 content_container_div.id = self.id + '_content';
@@ -205,12 +211,17 @@ class Widget {
             {
                 id: this.id,
                 class_name: 'collapsible_section_widget',
+                expanded: section_options.expanded === true,
+                max_width: Number(section_options.max_width) || 0,
+                max_height: Number(section_options.max_height) || 0,
+                full_width: section_options.full_width === true,
                 margin: { x: 0, y: 0 }
             }
         );
         section.build(parent_element);
         this.element = section.container;
         this.content_container = content_container_div;
+        this.element.content_container = content_container_div;
         return this.element;
     }
 
@@ -291,7 +302,7 @@ class Widget {
     // #region css_management
     /**
      * Update the CSS of the widget (merge with existing).
-     * @param {Object} css_updates - Key‑value pairs of CSS properties to add/update.
+     * @param {Object} css_updates - Key-value pairs of CSS properties to add/update.
      */
     update_css(css_updates) {
         for (let key in css_updates) {
@@ -315,12 +326,13 @@ class Widget {
     // #region command_generation
     /**
      * Generate the JavaScript command string that recreates this widget.
-     * @param {string} parent_var - The variable name for the parent container (default 'parent_container').
+     * Root widgets get parent 'parent_container'; nested widgets get their parent widget id.
      * @returns {string} A valid document.oc.object_generate(...) line.
      */
-    get_command_string(parent_var = 'parent_container') {
+    get_command_string(root_id) {
+        let is_root = !this.parent_id || this.parent_id === root_id;
         let params = {
-            parent: parent_var,
+            parent: is_root ? 'parent_container' : this.parent_id,
             row: this.row,
             col: this.col
         };
@@ -346,7 +358,7 @@ class Widget {
     }
 
     /**
-     * Convert an object to a compact single‑line string representation.
+     * Convert an object to a compact single-line string representation.
      * @param {Object} obj - The object to stringify.
      * @returns {string} Compact string.
      */
@@ -355,7 +367,8 @@ class Widget {
         for (let key in obj) {
             let value = obj[key];
             let value_str = this._value_to_string(value);
-            parts.push(`${key}: ${value_str}`);
+            let key_str = /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key) ? key : this._value_to_string(key);
+            parts.push(`${key_str}: ${value_str}`);
         }
         return `{ ${parts.join(', ')} }`;
     }

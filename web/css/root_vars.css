@@ -1,22 +1,34 @@
 /* #region root_variables */
 :root {
     /* Colors */
-    --tester_color_bg_primary: #f9fafb;
-    --tester_color_bg_secondary: #ffffff;
-    --tester_color_bg_tertiary: #f3f4f6;
-    --tester_color_text_primary: #111827;
-    --tester_color_text_secondary: #4b5563;
-    --tester_color_border: #e5e7eb;
-    --tester_color_accent: #3b82f6;
-    --tester_color_accent_hover: #2563eb;
-    --tester_color_success: #10b981;
-    --tester_color_warning: #f59e0b;
-    --tester_color_error: #ef4444;
+    --tester_color_page: var(--page_bg, #eceeff);
+    --tester_color_input_bg: var(--input_bg, #ffffff);
+    --tester_color_bg_primary: var(--surface_secondary, #f5f6ff);
+    --tester_color_bg_secondary: var(--surface, #ffffff);
+    --tester_color_bg_tertiary: var(--surface_hover, #e6e8fb);
+    --tester_color_text_primary: var(--text_primary, #161a3a);
+    --tester_color_text_secondary: var(--text_secondary, #454b78);
+    --tester_color_border: var(--border_light, #dcdff3);
+    --tester_color_border_strong: var(--border_focus, #a3a9d6);
+    --tester_color_text_muted: var(--text_muted, #767ca3);
+    --tester_color_focus_ring: var(--accent_muted, rgba(91, 75, 219, 0.12));
+    --tester_shadow: var(--shadow_sm, 0 1px 2px rgba(20, 24, 30, 0.08));
+    --tester_font_mono: var(--font_mono, ui-monospace, Consolas, monospace);
+    --tester_radius: 8px;
+    --tester_radius_sm: 6px;
+    --tester_control_height: 32px;
+    --tester_color_accent: var(--accent, #5b4bdb);
+    --tester_color_accent_2: var(--accent_2, #0fb5a4);
+    --tester_color_accent_hover: var(--accent_strong, #4638b8);
+    --tester_color_on_accent: var(--on_accent, #ffffff);
+    --tester_color_success: var(--success, #12a46a);
+    --tester_color_warning: var(--warning, #f08a24);
+    --tester_color_error: var(--danger, #e5484d);
 
     /* Typography */
-    --tester_font_family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --tester_font_size_small: 0.875rem;
-    --tester_font_size_base: 1rem;
+    --tester_font_family: var(--font_ui, system-ui, "Segoe UI", sans-serif);
+    --tester_font_size_small: 0.8125rem;
+    --tester_font_size_base: 0.875rem;
     --tester_font_size_large: 1.125rem;
     --tester_font_weight_normal: 400;
     --tester_font_weight_medium: 500;
@@ -30,26 +42,26 @@
     --tester_spacing_xl: 2rem;
 
     /* Object list colors */
-    --tester_color_object_list_bg_0: #e3f2fd;
-    --tester_color_object_list_bg_1: #bbdefb;
-    --tester_color_object_list_bg_2: #90caf9;
-    --tester_color_object_list_bg_3: #64b5f6;
-    --tester_color_object_list_bg_4: #42a5f5;
-    --tester_color_object_list_bg_5: #2196f3;
-    --tester_color_object_list_bg_6: #1e88e5;
-    --tester_color_object_list_bg_7: #1976d2;
-    --tester_color_object_list_bg_8: #1565c0;
-    --tester_color_object_list_bg_9: #0d47a1;
+    --tester_color_object_list_bg_0: color-mix(in srgb, var(--accent, #5b4bdb) 8%, var(--surface, #ffffff));
+    --tester_color_object_list_bg_1: color-mix(in srgb, var(--accent, #5b4bdb) 17%, var(--surface, #ffffff));
+    --tester_color_object_list_bg_2: color-mix(in srgb, var(--accent, #5b4bdb) 26%, var(--surface, #ffffff));
+    --tester_color_object_list_bg_3: color-mix(in srgb, var(--accent, #5b4bdb) 35%, var(--surface, #ffffff));
+    --tester_color_object_list_bg_4: color-mix(in srgb, var(--accent, #5b4bdb) 44%, var(--surface, #ffffff));
+    --tester_color_object_list_bg_5: color-mix(in srgb, var(--accent, #5b4bdb) 53%, var(--surface, #ffffff));
+    --tester_color_object_list_bg_6: color-mix(in srgb, var(--accent, #5b4bdb) 62%, var(--surface, #ffffff));
+    --tester_color_object_list_bg_7: color-mix(in srgb, var(--accent, #5b4bdb) 71%, var(--surface, #ffffff));
+    --tester_color_object_list_bg_8: color-mix(in srgb, var(--accent, #5b4bdb) 80%, var(--surface, #ffffff));
+    --tester_color_object_list_bg_9: color-mix(in srgb, var(--accent, #5b4bdb) 89%, var(--surface, #ffffff));
 
-    --tester_color_object_list_text_0: #0d47a1;
-    --tester_color_object_list_text_1: #0d47a1;
-    --tester_color_object_list_text_2: #0d47a1;
-    --tester_color_object_list_text_3: #0d47a1;
-    --tester_color_object_list_text_4: #ffffff;
-    --tester_color_object_list_text_5: #ffffff;
-    --tester_color_object_list_text_6: #ffffff;
-    --tester_color_object_list_text_7: #ffffff;
-    --tester_color_object_list_text_8: #ffffff;
-    --tester_color_object_list_text_9: #ffffff;
+    --tester_color_object_list_text_0: var(--text_primary, #161a3a);
+    --tester_color_object_list_text_1: var(--text_primary, #161a3a);
+    --tester_color_object_list_text_2: var(--text_primary, #161a3a);
+    --tester_color_object_list_text_3: var(--text_primary, #161a3a);
+    --tester_color_object_list_text_4: var(--text_primary, #161a3a);
+    --tester_color_object_list_text_5: var(--on_accent, #ffffff);
+    --tester_color_object_list_text_6: var(--on_accent, #ffffff);
+    --tester_color_object_list_text_7: var(--on_accent, #ffffff);
+    --tester_color_object_list_text_8: var(--on_accent, #ffffff);
+    --tester_color_object_list_text_9: var(--on_accent, #ffffff);
 }
 /* #endregion */

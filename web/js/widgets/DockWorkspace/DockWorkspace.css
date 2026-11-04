@@ -1,0 +1,110 @@
+/* #region dock_root */
+.dw_root {
+    /* Layout */
+    display: flex;
+    /* Dimensions */
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+.dw_horizontal {
+    /* Layout */
+    flex-direction: row;
+}
+
+.dw_vertical {
+    /* Layout */
+    flex-direction: column;
+}
+/* #endregion */
+
+/* #region dock_pane */
+.dw_pane {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Dimensions */
+    min-width: 0;
+    min-height: 0;
+}
+
+.dw_pane_header {
+    /* Layout */
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+    /* Dimensions */
+    height: var(--control_height, 23px);
+    padding: 0 8px;
+    box-sizing: border-box;
+    /* Colors */
+    background: var(--surface_secondary, #f5f6ff);
+    color: var(--text_secondary, #454b78);
+    /* Borders */
+    border-bottom: 1px solid var(--border_light, #dcdff3);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.dw_pane_body {
+    /* Layout */
+    position: relative;
+    flex: 1 1 0;
+    overflow: auto;
+    /* Dimensions */
+    min-width: 0;
+    min-height: 0;
+}
+
+.dw_pane_body:empty::before {
+    /* Layout */
+    display: block;
+    content: attr(data-dw_placeholder);
+    /* Dimensions */
+    padding: 8px;
+    /* Colors */
+    color: var(--text_muted, #767ca3);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 12px;
+}
+/* #endregion */
+
+/* #region dock_gutter */
+.dw_gutter {
+    /* Layout */
+    flex: 0 0 auto;
+    touch-action: none;
+    /* Colors */
+    background: var(--border_light, #dcdff3);
+    /* Effects */
+    transition: background-color 0.15s;
+}
+
+.dw_horizontal > .dw_gutter {
+    /* Layout */
+    cursor: col-resize;
+    /* Dimensions */
+    width: 6px;
+}
+
+.dw_vertical > .dw_gutter {
+    /* Layout */
+    cursor: row-resize;
+    /* Dimensions */
+    height: 6px;
+}
+
+.dw_gutter:hover,
+.dw_gutter.dw_dragging {
+    /* Colors */
+    background: var(--accent, #5b4bdb);
+}
+/* #endregion */

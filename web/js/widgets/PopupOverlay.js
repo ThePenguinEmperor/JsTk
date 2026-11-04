@@ -1,9 +1,9 @@
 // #region popup_overlay
 /**
- * PopupOverlay – a self‑contained modal overlay with scrollable content.
- * @param {Function} content_builder – function(container) to populate the popup.
- * @param {Object} [options] – { width, height, min_width, min_height, max_width, max_height }
- * @param {Function} [on_close] – called when popup is closed.
+ * PopupOverlay - a self-contained modal overlay with scrollable content.
+ * @param {Function} content_builder - function(container) to populate the popup.
+ * @param {Object} [options] - { width, height, min_width, min_height, max_width, max_height }
+ * @param {Function} [on_close] - called when popup is closed.
  */
 class PopupOverlay {
     constructor(content_builder, options = {}, on_close = null) {
@@ -73,7 +73,8 @@ class PopupOverlay {
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
+                background-color: var(--overlay_bg, rgba(11, 12, 26, 0.55));
+                backdrop-filter: blur(2px);
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -92,9 +93,11 @@ class PopupOverlay {
                 flex: 1;
                 min-height: 0;
                 overflow: auto;
-                background: #fff;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                background: var(--surface, #ffffff);
+                color: var(--text_primary, #161a3a);
+                border: 1px solid var(--border_light, #dcdff3);
+                border-radius: var(--radius_md, 8px);
+                box-shadow: var(--shadow_md, 0 6px 18px rgba(50, 45, 130, 0.16));
             }
             .popup_content_container {
                 padding: 16px;
@@ -110,7 +113,7 @@ class PopupOverlay {
                 align-items: center;
                 justify-content: center;
                 background: transparent;
-                color: #ffffff;
+                color: var(--text_primary, #ffffff);
                 border: none;
                 border-radius: 50%;
                 font-size: 20px;
@@ -147,7 +150,7 @@ class PopupOverlay {
 
         this.close_btn = document.createElement('button');
         this.close_btn.className = 'popup_close_btn';
-        this.close_btn.textContent = '×';
+        this.close_btn.textContent = 'x';
         this.close_btn.addEventListener('click', () => this.close());
         this.wrapper.appendChild(this.close_btn);
 

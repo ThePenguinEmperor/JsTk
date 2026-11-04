@@ -17,8 +17,8 @@
     flex: 1;
     min-height: 0;
     border: 1px solid var(--tester_color_border);
-    border-radius: 4px;
-    background-color: var(--tester_color_bg_secondary);
+    border-radius: var(--tester_radius);
+    background-color: var(--tester_color_input_bg);
 }
 
 .tester_object_item {
@@ -28,7 +28,8 @@
     padding: var(--tester_spacing_sm);
     background-color: var(--tester_color_bg_primary);
     border: 1px solid var(--tester_color_border);
-    border-radius: 4px;
+    border-left: 3px solid var(--tester_color_accent);
+    border-radius: var(--tester_radius_sm);
     flex-shrink: 0;
 }
 

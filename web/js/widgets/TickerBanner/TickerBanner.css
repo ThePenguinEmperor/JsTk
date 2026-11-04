@@ -1,0 +1,201 @@
+/* #region ticker_severity */
+.tb_sev_info {
+    /* Colors */
+    --tb_accent: var(--accent, #5b4bdb);
+}
+
+.tb_sev_warning {
+    /* Colors */
+    --tb_accent: var(--warning, #f08a24);
+}
+
+.tb_sev_error {
+    /* Colors */
+    --tb_accent: var(--danger, #e5484d);
+}
+
+.tb_banner.tb_hidden,
+.tb_restore.tb_hidden {
+    /* Layout */
+    display: none;
+}
+/* #endregion */
+
+/* #region ticker_banner */
+.tb_banner {
+    /* Layout */
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    /* Dimensions */
+    width: 100%;
+    padding: 3px 8px;
+    box-sizing: border-box;
+    /* Colors */
+    background: color-mix(in srgb, var(--tb_accent) 10%, var(--surface, #ffffff));
+    color: var(--tb_accent);
+    /* Borders */
+    border-bottom: 1px solid color-mix(in srgb, var(--tb_accent) 50%, transparent);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 11px;
+}
+
+.tb_icon {
+    /* Layout */
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+}
+
+.tb_text {
+    /* Layout */
+    flex: 1 1 auto;
+    overflow: hidden;
+    cursor: context-menu;
+    /* Dimensions */
+    min-width: 0;
+    /* Typography */
+    white-space: nowrap;
+}
+
+.tb_scroll {
+    /* Layout */
+    display: inline-block;
+    /* Dimensions */
+    padding-left: 100%;
+    /* Typography */
+    white-space: pre;
+}
+
+.tb_action,
+.tb_dismiss {
+    /* Layout */
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    cursor: pointer;
+    /* Colors */
+    background: transparent;
+    color: inherit;
+    /* Typography */
+    font-family: inherit;
+    font-size: 11px;
+    /* Effects */
+    opacity: 0.75;
+    transition: opacity 0.15s;
+}
+
+.tb_action {
+    /* Dimensions */
+    padding: 1px 6px;
+    /* Borders */
+    border: 1px solid color-mix(in srgb, var(--tb_accent) 50%, transparent);
+    border-radius: var(--radius_sm, 4px);
+    /* Typography */
+    font-weight: 700;
+}
+
+.tb_dismiss {
+    /* Dimensions */
+    padding: 2px;
+    /* Borders */
+    border: none;
+}
+
+.tb_action:hover,
+.tb_dismiss:hover {
+    /* Effects */
+    opacity: 1;
+}
+/* #endregion */
+
+/* #region ticker_restore */
+.tb_restore {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    /* Dimensions */
+    width: 100%;
+    padding: 1px 8px;
+    box-sizing: border-box;
+    /* Colors */
+    background: color-mix(in srgb, var(--tb_accent) 6%, var(--surface, #ffffff));
+    color: color-mix(in srgb, var(--tb_accent) 60%, var(--text_secondary, #454b78));
+    /* Borders */
+    border-bottom: 1px solid color-mix(in srgb, var(--tb_accent) 40%, var(--border_light, #dcdff3));
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 10px;
+}
+
+.tb_restore:hover {
+    /* Colors */
+    background: color-mix(in srgb, var(--tb_accent) 14%, var(--surface, #ffffff));
+}
+/* #endregion */
+
+/* #region ticker_hint */
+.tb_hint {
+    /* Layout */
+    position: fixed;
+    display: none;
+    pointer-events: none;
+    /* Dimensions */
+    max-width: 520px;
+    padding: 6px 10px;
+    box-sizing: border-box;
+    /* Colors */
+    background: color-mix(in srgb, var(--tb_accent) 10%, var(--surface, #ffffff));
+    color: var(--tb_accent);
+    /* Borders */
+    border: 1px solid var(--tb_accent);
+    border-radius: var(--radius_sm, 4px);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 11px;
+    /* Effects */
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--tb_accent) 25%, transparent);
+}
+
+.tb_hint.tb_hint_open {
+    /* Layout */
+    display: block;
+}
+
+.tb_hint.tb_hint_pinned {
+    /* Layout */
+    pointer-events: auto;
+    /* Borders */
+    border-width: 2px;
+}
+
+.tb_hint_line {
+    /* Dimensions */
+    padding: 1px 0;
+    /* Typography */
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.tb_hint_note {
+    /* Dimensions */
+    margin-top: 4px;
+    /* Typography */
+    font-style: italic;
+    /* Effects */
+    opacity: 0.75;
+}
+/* #endregion */
+
+@keyframes tb_scroll {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-100%);
+    }
+}

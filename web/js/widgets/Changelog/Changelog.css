@@ -1,0 +1,223 @@
+/* Changelog styles. Prefix: cl_ */
+
+/* #region overlay */
+.cl_overlay {
+    /* Layout */
+    display: flex;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    /* Colors */
+    background: var(--overlay_bg, rgba(255, 255, 255, 0.88));
+    /* Z-index */
+    z-index: var(--cl_z, 9970);
+}
+
+.cl_dialog {
+    /* Layout */
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    gap: 10px;
+    box-sizing: border-box;
+    /* Dimensions */
+    width: 90vw;
+    height: 80vh;
+    padding: 20px;
+    /* Colors */
+    background: var(--surface, #ffffff);
+    color: var(--text_primary, #161a3a);
+    /* Borders */
+    border: 1px solid var(--border_light, #dcdff3);
+    border-radius: var(--radius, 6px);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 13px;
+    /* Effects */
+    box-shadow: var(--shadow_md, 0 4px 6px rgba(0, 0, 0, 0.1));
+}
+/* #endregion */
+
+/* #region header */
+.cl_header {
+    /* Layout */
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+}
+
+.cl_header.cl_header_toggle {
+    /* Layout */
+    grid-template-columns: 1fr auto auto;
+}
+
+.cl_toggle_slot {
+    /* Layout */
+    display: none;
+}
+
+.cl_header_toggle .cl_toggle_slot {
+    /* Layout */
+    display: block;
+}
+
+.cl_title {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Typography */
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.cl_star {
+    /* Colors */
+    color: var(--accent, #5b4bdb);
+}
+
+.cl_ack {
+    /* Dimensions */
+    height: var(--control_height, 23px);
+    padding: 0 14px;
+    /* Colors */
+    background: var(--accent, #5b4bdb);
+    color: #ffffff;
+    /* Borders */
+    border: none;
+    border-radius: var(--radius_sm, 4px);
+    /* Typography */
+    font-family: inherit;
+    font-size: 12px;
+    /* Effects */
+    cursor: pointer;
+}
+
+.cl_ack:hover {
+    /* Colors */
+    background: var(--accent_strong, #4638b8);
+}
+
+.cl_badge {
+    /* Layout */
+    justify-self: start;
+    /* Dimensions */
+    padding: 2px 10px;
+    /* Colors */
+    background: var(--accent_soft, #e4e1fd);
+    color: var(--accent_strong, #4638b8);
+    /* Borders */
+    border-radius: 999px;
+    /* Typography */
+    font-size: 11px;
+    font-weight: 600;
+}
+/* #endregion */
+
+/* #region list */
+.cl_list {
+    /* Layout */
+    overflow-y: auto;
+    /* Dimensions */
+    min-height: 0;
+}
+
+.cl_heading {
+    /* Dimensions */
+    margin: 10px 0 4px;
+    /* Colors */
+    color: var(--text_secondary, #454b78);
+    /* Typography */
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.cl_entry {
+    /* Layout */
+    position: relative;
+    /* Dimensions */
+    padding: 2px 0 2px 16px;
+    /* Typography */
+    line-height: 1.45;
+}
+
+.cl_entry::before {
+    /* Layout */
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 0.75em;
+    /* Dimensions */
+    width: 5px;
+    height: 5px;
+    /* Colors */
+    background: var(--text_muted, #767ca3);
+    /* Borders */
+    border-radius: 50%;
+}
+/* #endregion */
+
+/* #region pager */
+.cl_pager {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* Dimensions */
+    padding-top: 8px;
+    /* Borders */
+    border-top: 1px solid var(--border_light, #dcdff3);
+}
+
+.cl_page_btn {
+    /* Layout */
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    /* Dimensions */
+    height: var(--control_height, 23px);
+    padding: 0 10px;
+    /* Colors */
+    background: var(--surface_secondary, #f5f6ff);
+    color: var(--text_primary, #161a3a);
+    /* Borders */
+    border: 1px solid var(--border_light, #dcdff3);
+    border-radius: var(--radius_sm, 4px);
+    /* Typography */
+    font-family: inherit;
+    font-size: 12px;
+    /* Effects */
+    cursor: pointer;
+}
+
+.cl_page_btn:disabled {
+    /* Effects */
+    cursor: default;
+    opacity: 0.4;
+}
+
+.cl_page_label {
+    /* Colors */
+    color: var(--text_muted, #767ca3);
+    /* Typography */
+    font-size: 12px;
+}
+/* #endregion */
+
+.cl_open_btn {
+    /* Dimensions */
+    height: var(--control_height, 23px);
+    padding: 0 12px;
+    /* Colors */
+    background: var(--surface_secondary, #f5f6ff);
+    color: var(--text_primary, #161a3a);
+    /* Borders */
+    border: 1px solid var(--border_light, #dcdff3);
+    border-radius: var(--radius_sm, 4px);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 12px;
+    /* Effects */
+    cursor: pointer;
+}

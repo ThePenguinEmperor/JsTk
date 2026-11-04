@@ -1,0 +1,91 @@
+/* #region ts_root */
+.ts_root {
+    /* Layout */
+    display: inline-flex;
+    position: relative;
+    align-items: center;
+    gap: 8px;
+    /* Colors */
+    color: var(--text_primary, #161a3a);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 12px;
+    /* Effects */
+    cursor: pointer;
+    user-select: none;
+}
+
+.ts_root.ts_disabled {
+    /* Effects */
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+/* #endregion */
+
+/* #region ts_track */
+.ts_input {
+    /* Layout */
+    position: absolute;
+    /* Dimensions */
+    width: 0;
+    height: 0;
+    margin: 0;
+    /* Effects */
+    opacity: 0;
+}
+
+.ts_track {
+    /* Layout */
+    position: relative;
+    flex: none;
+    /* Dimensions */
+    width: 32px;
+    height: 18px;
+    /* Colors */
+    background: var(--border_light, #dcdff3);
+    /* Borders */
+    border-radius: 9px;
+    /* Effects */
+    transition: background-color 0.2s;
+}
+
+.ts_knob {
+    /* Layout */
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    /* Dimensions */
+    width: 14px;
+    height: 14px;
+    /* Colors */
+    background: var(--surface, #ffffff);
+    /* Borders */
+    border-radius: 50%;
+    /* Effects */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s;
+}
+
+.ts_input:checked + .ts_track {
+    /* Colors */
+    background: var(--accent, #5b4bdb);
+}
+
+.ts_input:checked + .ts_track .ts_knob {
+    /* Effects */
+    transform: translateX(14px);
+}
+
+.ts_input:focus-visible + .ts_track {
+    /* Borders */
+    outline: 2px solid var(--accent, #5b4bdb);
+    outline-offset: 1px;
+}
+/* #endregion */
+
+.ts_text {
+    /* Typography */
+    font-size: 12px;
+    line-height: 1;
+}

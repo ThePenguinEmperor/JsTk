@@ -1,0 +1,328 @@
+/* Table widget styles (prefix tbl_). */
+
+/* #region layout */
+.tbl_root {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    /* Dimensions */
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+.tbl_header {
+    /* Layout */
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+    /* Dimensions */
+    margin: 4px;
+    padding: 4px 6px;
+    /* Colors */
+    background: var(--surface, #ffffff);
+    /* Borders */
+    border-radius: 6px;
+}
+
+.tbl_grid {
+    /* Layout */
+    flex: 1 1 auto;
+    /* Dimensions */
+    width: 100%;
+    min-height: 120px;
+}
+/* #endregion */
+
+/* #region header_controls */
+.tbl_search {
+    /* Layout */
+    flex: 1 1 auto;
+    /* Dimensions */
+    min-width: 0;
+}
+
+.tbl_search_input {
+    /* Dimensions */
+    width: 100%;
+    height: var(--control_height, 23px);
+    padding: 0 10px;
+    box-sizing: border-box;
+    /* Colors */
+    background: var(--surface, #ffffff);
+    color: var(--text_primary, #161a3a);
+    /* Borders */
+    border: 1px solid var(--border_light, #dcdff3);
+    border-radius: var(--radius_sm, 4px);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 12px;
+}
+
+.tbl_btn {
+    /* Layout */
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    /* Dimensions */
+    width: var(--control_height, 23px);
+    height: var(--control_height, 23px);
+    /* Colors */
+    color: var(--text_secondary, #454b78);
+    /* Borders */
+    border-radius: var(--radius_sm, 4px);
+    /* Effects */
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.tbl_btn:hover,
+.tbl_btn:focus-visible {
+    /* Colors */
+    background: var(--surface_hover, #dcdff3);
+    /* Borders */
+    outline: none;
+}
+/* #endregion */
+
+/* #region overlays */
+.tbl_loading {
+    /* Layout */
+    display: flex;
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    /* Colors */
+    background: var(--overlay_bg, rgba(255, 255, 255, 0.88));
+    color: var(--text_primary, #161a3a);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 14px;
+    /* Z-index */
+    z-index: 5;
+}
+
+.tbl_empty {
+    /* Colors */
+    color: var(--text_secondary, #454b78);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 13px;
+}
+/* #endregion */
+
+/* #region filter_icon */
+.tbl_filter_icon {
+    /* Layout */
+    display: inline-flex;
+    align-items: center;
+    /* Dimensions */
+    margin-left: 6px;
+    padding: 2px;
+    /* Colors */
+    color: var(--text_muted, #767ca3);
+    /* Effects */
+    cursor: pointer;
+}
+
+.tbl_filter_icon.tbl_filter_active {
+    /* Colors */
+    color: var(--success, #12a46a);
+}
+/* #endregion */
+
+/* #region filter_popup */
+.tbl_filter_popup {
+    /* Layout */
+    display: none;
+    position: fixed;
+    flex-direction: column;
+    gap: 6px;
+    /* Dimensions */
+    width: 240px;
+    padding: 6px;
+    box-sizing: border-box;
+    /* Colors */
+    background: var(--surface, #ffffff);
+    color: var(--text_primary, #161a3a);
+    /* Borders */
+    border: 1px solid var(--border_light, #dcdff3);
+    border-radius: var(--radius, 6px);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 12px;
+    /* Effects */
+    box-shadow: var(--shadow_md, 0 4px 6px rgba(0, 0, 0, 0.1));
+    /* Z-index */
+    z-index: 3;
+}
+
+.tbl_filter_popup.tbl_filter_open {
+    /* Layout */
+    display: flex;
+}
+
+.tbl_filter_list {
+    /* Dimensions */
+    height: 220px;
+    overflow: auto;
+}
+
+.tbl_filter_apply {
+    /* Dimensions */
+    width: 100%;
+    height: var(--control_height, 23px);
+    /* Colors */
+    background: var(--tbl_filter_btn_bg, var(--accent, #5b4bdb));
+    color: #ffffff;
+    /* Borders */
+    border: none;
+    border-radius: var(--radius_sm, 4px);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 12px;
+    /* Effects */
+    cursor: pointer;
+}
+
+.tbl_filter_apply:hover {
+    /* Colors */
+    background: var(--tbl_filter_btn_bg_hover, var(--accent_strong, #4638b8));
+}
+/* #endregion */
+
+/* #region fallback_list */
+.tbl_fallback_row {
+    /* Dimensions */
+    padding: 3px 8px 3px 20px;
+    /* Colors */
+    color: var(--text_secondary, #454b78);
+    /* Borders */
+    border-radius: var(--radius_sm, 4px);
+    /* Effects */
+    cursor: pointer;
+    user-select: none;
+}
+
+.tbl_fallback_row:hover {
+    /* Colors */
+    background: var(--surface_hover, #dcdff3);
+}
+
+.tbl_fallback_selected {
+    /* Colors */
+    color: var(--success_strong, #0b8452);
+    /* Typography */
+    font-weight: 600;
+}
+
+.tbl_fallback_excluded {
+    /* Colors */
+    color: var(--danger, #e5484d);
+    /* Typography */
+    text-decoration: line-through;
+}
+/* #endregion */
+
+/* #region action_column */
+.tbl_action_cell {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    /* Dimensions */
+    height: 100%;
+}
+
+.tbl_action_btn {
+    /* Layout */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Dimensions */
+    min-width: 20px;
+    height: 20px;
+    padding: 0 3px;
+    /* Colors */
+    color: var(--text_secondary, #454b78);
+    /* Borders */
+    border-radius: var(--radius_sm, 4px);
+    /* Effects */
+    cursor: pointer;
+}
+
+.tbl_action_btn:hover {
+    /* Colors */
+    background: var(--surface_hover, #dcdff3);
+    color: var(--accent, #5b4bdb);
+}
+/* #endregion */
+
+/* #region ag_grid_theme */
+.tbl_grid.ag-theme-alpine {
+    --ag-background-color: var(--surface, #ffffff);
+    --ag-foreground-color: var(--text_primary, #161a3a);
+    --ag-secondary-foreground-color: var(--text_secondary, #454b78);
+    --ag-header-background-color: var(--surface_secondary, #f5f6ff);
+    --ag-header-foreground-color: var(--text_primary, #161a3a);
+    --ag-subheader-background-color: var(--surface_secondary, #f5f6ff);
+    --ag-control-panel-background-color: var(--surface_secondary, #f5f6ff);
+    --ag-border-color: var(--border_light, #dcdff3);
+    --ag-row-border-color: var(--border_light, #dcdff3);
+    --ag-odd-row-background-color: var(--surface, #ffffff);
+    --ag-row-hover-color: var(--accent_muted, rgba(91, 75, 219, 0.14));
+    --ag-selected-row-background-color: var(--accent_muted, rgba(91, 75, 219, 0.14));
+    --ag-range-selection-background-color: var(--accent_muted, rgba(91, 75, 219, 0.14));
+    --ag-alpine-active-color: var(--accent, #5b4bdb);
+    --ag-checkbox-checked-color: var(--accent, #5b4bdb);
+    --ag-input-focus-border-color: var(--accent, #5b4bdb);
+    --ag-input-border-color: var(--border_focus, #a3a9d6);
+    --ag-modal-overlay-background-color: var(--overlay_bg, rgba(255, 255, 255, 0.88));
+    --ag-disabled-foreground-color: var(--text_muted, #767ca3);
+    --ag-font-family: var(--font_ui, system-ui, sans-serif);
+    --ag-font-size: 13px;
+}
+/* #endregion ag_grid_theme */
+
+/* #region selection_and_edit */
+.tbl_btn_active {
+    /* Colors */
+    background: var(--accent_soft, #e4e1fd);
+    color: var(--accent, #5b4bdb);
+}
+
+.tbl_editing .tbl_cell_editable {
+    /* Colors */
+    background: var(--accent_muted, rgba(91, 75, 219, 0.14));
+    /* Borders */
+    box-shadow: inset 0 0 0 1px var(--border_light, #dcdff3);
+}
+
+.tbl_grid .ag-cell-inline-editing {
+    /* Colors */
+    background: var(--input_bg, #ffffff);
+    color: var(--text_primary, #161a3a);
+    /* Borders */
+    border-color: var(--accent, #5b4bdb);
+}
+/* #endregion */
+
+.tbl_cell_check {
+    /* Dimensions */
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    /* Effects */
+    accent-color: var(--accent, #5b4bdb);
+    vertical-align: middle;
+}
+
+.tbl_ac_editor {
+    /* Dimensions */
+    min-width: 180px;
+}

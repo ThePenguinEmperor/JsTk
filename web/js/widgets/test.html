@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CollapsibleSection Test</title>
+    <!-- Optional: override default styles -->
+    <style>
+        /* .collapsible_header { background-color: #d1e7dd; } */
+    </style>
+</head>
+<body>
+    <div id="demo" style="max-width: 600px; margin: 20px auto;"></div>
+
+    <script src="CollapsibleSection.js"></script>
+    <script>
+        const container = document.getElementById('demo');
+
+        // Section 1: simple text
+        const sec1 = new CollapsibleSection('Section 1', (content) => {
+            content.innerHTML = '<p>This is the content of section 1. Lorem ipsum dolor sit amet.</p>';
+        });
+        sec1.build(container);
+
+        // Section 2: with a button and custom ID/class
+        const sec2 = new CollapsibleSection('Section 2', (content) => {
+            const btn = document.createElement('button');
+            btn.textContent = 'Click me';
+            btn.onclick = () => alert('Button clicked!');
+            content.appendChild(btn);
+            content.appendChild(document.createTextNode(' Some text.'));
+        }, { id: 'my-section', class_name: 'special', margin: { x: 0, y: 5 } });
+        sec2.build(container);
+
+        // Optional: expand/collapse programmatically after 2 seconds
+        setTimeout(() => {
+            sec2.expand();
+        }, 2000);
+    </script>
+</body>
+</html>

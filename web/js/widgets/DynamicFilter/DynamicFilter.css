@@ -1,0 +1,150 @@
+/* DynamicFilter styles. Prefix: df_ */
+
+/* #region containers */
+.df_root {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Dimensions */
+    width: 100%;
+}
+
+.df_list {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    /* Dimensions */
+    max-height: 320px;
+    /* Effects */
+    scrollbar-width: thin;
+}
+
+.df_empty {
+    /* Layout */
+    text-align: center;
+    /* Dimensions */
+    padding: 12px;
+    /* Colors */
+    color: var(--text_secondary, #454b78);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 12px;
+}
+/* #endregion */
+
+/* #region rows */
+.df_row {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    /* Dimensions */
+    padding: 4px 6px;
+    /* Colors */
+    color: var(--text_primary, #161a3a);
+    /* Borders */
+    border-bottom: 1px solid var(--border_light, #dcdff3);
+    border-top: 2px solid transparent;
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 12px;
+    /* Effects */
+    cursor: default;
+    user-select: none;
+}
+
+.df_row:hover {
+    /* Colors */
+    background: var(--surface_secondary, #f5f6ff);
+}
+
+.df_row_disabled {
+    /* Colors */
+    color: var(--text_disabled, var(--text_muted, #a3a9d6));
+}
+
+.df_row_disabled .df_name {
+    /* Typography */
+    text-decoration: line-through;
+}
+
+.df_dragging {
+    /* Effects */
+    opacity: 0.35;
+}
+
+.df_drag_target {
+    /* Borders */
+    border-top: 2px solid var(--accent, #5b4bdb);
+}
+/* #endregion */
+
+/* #region row_parts */
+.df_handle {
+    /* Layout */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    /* Dimensions */
+    width: 16px;
+    /* Colors */
+    color: var(--border_focus, #a3a9d6);
+    /* Typography */
+    font-size: 15px;
+    /* Effects */
+    cursor: grab;
+}
+
+.df_handle:active {
+    /* Effects */
+    cursor: grabbing;
+}
+
+.df_check_label {
+    /* Layout */
+    display: inline-flex;
+    align-items: center;
+}
+
+.df_check {
+    /* Dimensions */
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    /* Effects */
+    cursor: pointer;
+}
+
+.df_name {
+    /* Layout */
+    flex: 1 1 auto;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    /* Dimensions */
+    min-width: 0;
+}
+
+.df_type {
+    /* Dimensions */
+    min-width: 82px;
+    /* Colors */
+    background: var(--surface_input, var(--surface, #ffffff));
+    color: var(--text_primary, #161a3a);
+    /* Borders */
+    border: 1px solid var(--border_input, var(--border_light, #dcdff3));
+    border-radius: var(--radius_sm, 4px);
+    outline: none;
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 11px;
+}
+
+.df_type:focus {
+    /* Borders */
+    border-color: var(--border_focus, #a3a9d6);
+}
+/* #endregion */

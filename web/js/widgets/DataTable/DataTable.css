@@ -1,0 +1,117 @@
+/* #region data_table */
+.data_table_wrapper {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    /* Dimensions */
+    width: 100%;
+    height: 100%;
+    /* Effects */
+    overflow: hidden;
+}
+.data_table_container {
+    /* Layout */
+    flex: 1;
+    position: relative;
+    /* Dimensions */
+    overflow: auto;
+    /* Borders */
+    border: 1px solid var(--border_light, #dcdff3);
+    border-radius: 4px;
+}
+.data_table_header {
+    /* Layout */
+    display: flex;
+    position: sticky;
+    top: 0;
+    /* Colors */
+    background-color: var(--surface_secondary, #f5f6ff);
+    /* Borders */
+    border-bottom: 2px solid var(--border_light, #dcdff3);
+    /* Z-index */
+    z-index: 1;
+}
+.data_table_header_cell {
+    /* Layout */
+    flex: 1 1 auto;
+    /* Dimensions */
+    padding: 8px;
+    /* Typography */
+    font-weight: bold;
+    /* Effects */
+    cursor: default;
+}
+.data_table_virtual_viewport {
+    /* Layout */
+    position: relative;
+    /* Dimensions */
+    overflow-y: auto;
+    height: 100%;
+}
+.data_table_spacer {
+    /* Dimensions */
+    width: 100%;
+    /* Layout */
+    position: relative;
+}
+.data_table_rows_container {
+    /* Layout */
+    position: relative;
+    /* Dimensions */
+    width: 100%;
+}
+.data_table_row {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    /* Dimensions */
+    width: 100%;
+    /* Borders */
+    border-bottom: 1px solid var(--border_light, #dcdff3);
+    /* Effects */
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.data_table_row:hover {
+    /* Colors */
+    background-color: var(--surface_hover, #e6e8fb);
+}
+.data_table_cell {
+    /* Layout */
+    flex: 1 1 auto;
+    /* Dimensions */
+    padding: 4px 8px;
+    /* Typography */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sort_indicator {
+    /* Dimensions */
+    margin-left: 5px;
+    /* Typography */
+    font-size: 10px;
+}
+.column_filter_btn {
+    /* Colors */
+    background: transparent;
+    /* Borders */
+    border: none;
+    /* Typography */
+    font-size: 10px;
+    /* Effects */
+    cursor: pointer;
+}
+.data_table_filter_popup,
+.data_table_context_menu {
+    /* Colors */
+    background: var(--surface, #ffffff);
+    /* Borders */
+    border: 1px solid var(--border_focus, #a3a9d6);
+    border-radius: 4px;
+    /* Effects */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    /* Z-index */
+    z-index: 1000;
+}
+/* #endregion */

@@ -11,12 +11,13 @@ class MessageBox {
         this.timeout_id = null;
 
         // Type-specific container overrides
+        let tone = { info: 'var(--accent, #5b4bdb)', success: 'var(--success, #12a46a)', error: 'var(--danger, #e5484d)', warning: 'var(--warning, #f08a24)' }[this.type] || 'var(--accent, #5b4bdb)';
         let type_style = {
-            info: { backgroundColor: '#e3f2fd', color: '#0d47a1', borderLeft: '4px solid #2196f3' },
-            success: { backgroundColor: '#e8f5e9', color: '#1b5e20', borderLeft: '4px solid #4caf50' },
-            error: { backgroundColor: '#ffebee', color: '#b71c1c', borderLeft: '4px solid #f44336' },
-            warning: { backgroundColor: '#fff3e0', color: '#e65100', borderLeft: '4px solid #ff9800' }
-        }[this.type] || { backgroundColor: '#e3f2fd', color: '#0d47a1', borderLeft: '4px solid #2196f3' };
+            backgroundColor: 'color-mix(in srgb, ' + tone + ' 16%, var(--surface, #ffffff))',
+            color: 'var(--text_primary, #161a3a)',
+            border: '1px solid color-mix(in srgb, ' + tone + ' 40%, transparent)',
+            borderLeft: '4px solid ' + tone
+        };
 
         // ONE DICTIONARY with all styling
         this.styles = {
@@ -27,10 +28,10 @@ class MessageBox {
                 minWidth: '150px',
                 padding: '12px 16px',
                 borderRadius: '8px',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
+                fontFamily: 'var(--font_ui, system-ui, sans-serif)',
                 fontSize: '14px',
                 lineHeight: '1.4',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                boxShadow: 'var(--shadow_md, 0 2px 8px rgba(0,0,0,0.15))',
                 display: 'flex',
                 alignItems: 'flex-start',
                 justifyContent: 'space-between',
@@ -50,6 +51,7 @@ class MessageBox {
             },
             close_button: {
                 background: 'none',
+                color: 'inherit',
                 border: 'none',
                 fontSize: '16px',
                 cursor: 'pointer',
@@ -102,7 +104,7 @@ class MessageBox {
         el.appendChild(text_span);
         let btn = document.createElement('button');
         this.apply_style(btn, this.styles.close_button);
-        btn.textContent = '✕';
+        btn.textContent = 'x';
         btn.onmouseover = () => btn.style.opacity = '1';
         btn.onmouseout = () => btn.style.opacity = '0.6';
         btn.onclick = () => this.destroy();

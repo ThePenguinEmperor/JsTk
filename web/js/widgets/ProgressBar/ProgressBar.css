@@ -1,0 +1,145 @@
+/* #region pb_root */
+.pb_root {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    /* Dimensions */
+    width: 100%;
+    /* Colors */
+    color: var(--text_primary, #161a3a);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+}
+
+.pb_root.pb_clickable {
+    /* Effects */
+    cursor: pointer;
+}
+/* #endregion */
+
+/* #region pb_states */
+.pb_idle {
+    /* Colors */
+    --pb_c: var(--text_muted, #767ca3);
+}
+
+.pb_running {
+    /* Colors */
+    --pb_c: var(--accent, #5b4bdb);
+}
+
+.pb_success {
+    /* Colors */
+    --pb_c: var(--success, #12a46a);
+}
+
+.pb_error {
+    /* Colors */
+    --pb_c: var(--danger, #e5484d);
+}
+/* #endregion */
+
+/* #region pb_info */
+.pb_info {
+    /* Layout */
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.pb_label {
+    /* Layout */
+    flex: 1;
+    /* Dimensions */
+    min-width: 0;
+    /* Colors */
+    color: var(--text_secondary, #454b78);
+    /* Typography */
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pb_percent {
+    /* Colors */
+    color: var(--text_muted, #767ca3);
+    /* Typography */
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+/* #endregion */
+
+/* #region pb_track */
+.pb_track {
+    /* Layout */
+    overflow: hidden;
+    /* Dimensions */
+    width: 100%;
+    height: 6px;
+    /* Colors */
+    background: var(--surface_secondary, #f5f6ff);
+    /* Borders */
+    border-radius: var(--radius_sm, 4px);
+}
+
+.pb_compact .pb_track {
+    /* Dimensions */
+    height: 3px;
+}
+
+.pb_fill {
+    /* Dimensions */
+    width: 0;
+    height: 100%;
+    /* Colors */
+    background: var(--pb_c, #767ca3);
+    /* Borders */
+    border-radius: inherit;
+    /* Effects */
+    transition: width 0.2s ease, background-color 0.2s ease;
+}
+
+.pb_indeterminate .pb_fill {
+    /* Dimensions */
+    width: 35%;
+    /* Effects */
+    transition: background-color 0.2s ease;
+    animation: pb_slide 1.1s ease-in-out infinite;
+}
+/* #endregion */
+
+/* #region pb_animations */
+@keyframes pb_slide {
+    from {
+        /* Dimensions */
+        margin-left: -35%;
+    }
+    to {
+        /* Dimensions */
+        margin-left: 100%;
+    }
+}
+
+@keyframes pb_pulse {
+    0%, 100% {
+        /* Effects */
+        opacity: 0.35;
+    }
+    50% {
+        /* Effects */
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pb_indeterminate .pb_fill {
+        /* Dimensions */
+        width: 100%;
+        margin-left: 0;
+        /* Effects */
+        animation: pb_pulse 1.6s ease-in-out infinite;
+    }
+}
+/* #endregion */

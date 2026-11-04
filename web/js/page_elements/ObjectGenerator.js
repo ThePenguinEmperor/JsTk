@@ -34,13 +34,13 @@ class ObjectGenerator {
         this.element_margin = margin;
         let row_counter = 1;
 
-        // Row 1: HTML Tag (col1-2) and Parent Container (col3-4) – labels only
+        // Row 1: HTML Tag (col1-2) and Parent Container (col3-4) - labels only
         let tag_label = document.oc.object_generate('span', {
             parent: this.container,
             row: row_counter,
             col: 1,
             col_span: 2,
-            text: '🏷️ HTML Tag',
+            text: 'HTML Tag',
             class_name: 'tester_label',
             sticky: 'ew',
             padx: margin.x,
@@ -52,7 +52,7 @@ class ObjectGenerator {
             row: row_counter,
             col: 3,
             col_span: 2,
-            text: '📁 Parent Container',
+            text: 'Parent Container',
             class_name: 'tester_label',
             sticky: 'ew',
             padx: margin.x,
@@ -75,10 +75,12 @@ class ObjectGenerator {
         });
         for (let tag of this.controller.available_tags) {
             let option = document.createElement('option');
+            let entry = window.WidgetRegistry ? WidgetRegistry.get(tag) : null;
             option.value = tag;
-            option.textContent = tag;
+            option.textContent = entry ? entry.label + ' (' + tag + ')' : tag;
             this.tag_select.appendChild(option);
         }
+        document.oc.bind(this.tag_select, 'change', () => this.render_options_form({}));
 
         this.parent_select = document.oc.object_generate('select', {
             parent: this.container,
@@ -98,18 +100,18 @@ class ObjectGenerator {
             parent: this.container,
             row: row_counter,
             col: 1,
-            text: '🆔',
+            text: 'ID',
             class_name: 'tester_label',
             sticky: 'ew',
             padx: margin.x,
             pady: margin.y,
-            title: 'Unique identifier for the widget (auto‑generated if empty)'
+            title: 'Unique identifier for the widget (auto-generated if empty)'
         });
         let class_label = document.oc.object_generate('span', {
             parent: this.container,
             row: row_counter,
             col: 2,
-            text: '📌 Class Name',
+            text: 'Class Name',
             class_name: 'tester_label',
             sticky: 'ew',
             padx: margin.x,
@@ -120,7 +122,7 @@ class ObjectGenerator {
             parent: this.container,
             row: row_counter,
             col: 4,
-            text: '📝 Text Content',
+            text: 'Text Content',
             class_name: 'tester_label',
             sticky: 'ew',
             padx: margin.x,
@@ -148,7 +150,7 @@ class ObjectGenerator {
             sticky: 'ew',
             padx: margin.x,
             pady: margin.y,
-            title: 'CSS class name(s), space‑separated'
+            title: 'CSS class name(s), space-separated'
         });
         this.text_input = document.oc.object_generate('input', {
             parent: this.container,
@@ -172,7 +174,7 @@ class ObjectGenerator {
             sticky: 'ew',
             padx: margin.x,
             pady: margin.y,
-            title: 'Grid row start (1‑based)'
+            title: 'Grid row start (1-based)'
         });
         document.oc.object_generate('span', {
             parent: this.container,
@@ -183,7 +185,7 @@ class ObjectGenerator {
             sticky: 'ew',
             padx: margin.x,
             pady: margin.y,
-            title: 'Grid column start (1‑based)'
+            title: 'Grid column start (1-based)'
         });
         document.oc.object_generate('span', {
             parent: this.container,
@@ -263,7 +265,7 @@ class ObjectGenerator {
             parent: this.container,
             row: row_counter,
             col: 1,
-            text: '📍 Sticky',
+            text: 'Sticky',
             class_name: 'tester_label',
             sticky: 'ew',
             padx: margin.x,
@@ -443,12 +445,25 @@ class ObjectGenerator {
         });
         row_counter++;
 
+        this.options_box = document.oc.object_generate('div', {
+            parent: this.container,
+            row: row_counter,
+            col: 1,
+            col_span: 4,
+            class_name: 'tester_options_box',
+            sticky: 'nsew',
+            padx: margin.x,
+            pady: margin.y,
+            style: 'display: none;'
+        });
+        row_counter++;
+
         // Row 10: buttons
         this.cancel_btn = document.oc.object_generate('button', {
             parent: this.container,
             row: row_counter,
             col: 1,
-            text: '❌',
+            text: 'Cancel',
             class_name: 'tester_button tester_button_secondary',
             sticky: 'ew',
             padx: margin.x,
@@ -462,7 +477,7 @@ class ObjectGenerator {
             parent: this.container,
             row: row_counter,
             col: 2,
-            text: '🎨',
+            text: 'CSS',
             class_name: 'tester_button tester_button_secondary',
             sticky: 'ew',
             padx: margin.x,
@@ -476,7 +491,7 @@ class ObjectGenerator {
             parent: this.container,
             row: row_counter,
             col: 4,
-            text: '➕ Add',
+            text: 'Add',
             class_name: 'tester_button',
             sticky: 'ew',
             padx: margin.x,
@@ -489,7 +504,7 @@ class ObjectGenerator {
             parent: this.container,
             row: row_counter,
             col: 4,
-            text: '💾 Save',
+            text: 'Save',
             class_name: 'tester_button',
             sticky: 'ew',
             padx: margin.x,
@@ -564,12 +579,16 @@ class ObjectGenerator {
         if (!isNaN(ipadx)) params.ipadx = ipadx;
         let ipady = parseInt(this.padding_y_input.value);
         if (!isNaN(ipady)) params.ipady = ipady;
+        if (this.option_fields && this.option_fields.length > 0) {
+            params.options = this.get_option_values();
+        }
 
         return params;
     }
 
     set_values_from_widget(widget) {
         this.tag_select.value = widget.tag;
+        this.render_options_form(widget.extra_attributes.options || {});
         this.parent_select.value = widget.parent_id;
         this.row_input.value = widget.row;
         this.col_input.value = widget.col;
@@ -592,6 +611,7 @@ class ObjectGenerator {
 
     clear_form() {
         this.tag_select.value = 'button';
+        this.render_options_form({});
         if (this.parent_select.options.length > 0) {
             this.parent_select.value = this.controller.preview_grid_id;
         }
@@ -662,4 +682,99 @@ class ObjectGenerator {
         }
     }
 // #endregion
+
+// #region widget_options
+    /**
+     * Renders inputs for the selected registered widget's options and fills them from values.
+     */
+    render_options_form(values) {
+        this.options_box.innerHTML = '';
+        this.option_fields = [];
+        let entry = window.WidgetRegistry ? WidgetRegistry.get(this.tag_select.value) : null;
+        if (!entry || entry.options.length === 0) {
+            this.options_box.style.display = 'none';
+            return;
+        }
+        this.options_box.style.display = 'grid';
+        let row = 1;
+        for (let field of entry.options) {
+            let value = values[field.name] !== undefined ? values[field.name] : field.default;
+            document.oc.object_generate('label', {
+                parent: this.options_box, row: row, col: 1, sticky: 'w', padx: 4, pady: 2,
+                text: field.label || field.name, class_name: 'tester_label'
+            });
+            let input = this._build_option_input(field, value, row);
+            this.option_fields.push({ field, input });
+            row++;
+        }
+        document.oc.configure_column(this.options_box, 2, { weight: 1 });
+    }
+
+    /**
+     * Creates the input element matching an option field type.
+     */
+    _build_option_input(field, value, row) {
+        let base = { parent: this.options_box, row: row, col: 2, sticky: 'ew', padx: 4, pady: 2, title: field.name };
+        if (field.type === 'bool') {
+            return document.oc.object_generate('input', Object.assign(base, { type: 'checkbox', sticky: 'w', properties: { checked: !!value } }));
+        }
+        if (field.type === 'select') {
+            let select = document.oc.object_generate('select', Object.assign(base, { class_name: 'tester_select' }));
+            for (let choice of field.choices || []) {
+                document.oc.object_generate('option', { parent: select, text: String(choice), value: String(choice) });
+            }
+            select.style.display = '';
+            select.value = value === undefined ? '' : String(value);
+            return select;
+        }
+        if (field.type === 'json') {
+            let text = value === undefined ? '' : JSON.stringify(value, null, 1);
+            return document.oc.object_generate('textarea', Object.assign(base, { class_name: 'tester_input', value: text, rows: 3 }));
+        }
+        let input_type = field.type === 'number' ? 'number' : 'text';
+        let text_value = value === undefined || value === null ? '' : String(value);
+        return document.oc.object_generate('input', Object.assign(base, { type: input_type, class_name: 'tester_input', value: text_value }));
+    }
+
+    /**
+     * Reads option inputs into a plain object; invalid JSON is kept as a string and outlined red.
+     */
+    get_option_values() {
+        let values = {};
+        for (let { field, input } of this.option_fields) {
+            if (field.type === 'bool') {
+                values[field.name] = input.checked;
+            } else if (field.type === 'number') {
+                let number = parseFloat(input.value);
+                if (!isNaN(number)) {
+                    values[field.name] = number;
+                }
+            } else if (field.type === 'json') {
+                let parsed = this._parse_json_input(input);
+                if (parsed !== undefined) {
+                    values[field.name] = parsed;
+                }
+            } else if (input.value !== '') {
+                values[field.name] = input.value;
+            }
+        }
+        return values;
+    }
+
+    /**
+     * Parses a JSON textarea; on failure returns the raw text and marks the field.
+     */
+    _parse_json_input(input) {
+        input.style.outline = '';
+        if (input.value.trim() === '') {
+            return undefined;
+        }
+        try {
+            return JSON.parse(input.value);
+        } catch (error) {
+            input.style.outline = '2px solid var(--tester_color_error)';
+            return input.value;
+        }
+    }
+// #endregion widget_options
 }

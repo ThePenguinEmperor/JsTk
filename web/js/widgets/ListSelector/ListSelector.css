@@ -1,0 +1,180 @@
+/* ListSelector styles. Prefix: ls_ */
+
+/* #region containers */
+.ls_root {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    /* Dimensions */
+    width: 100%;
+    height: 100%;
+    min-height: 160px;
+    /* Colors */
+    background: var(--surface, #ffffff);
+    color: var(--text_primary, #161a3a);
+    /* Typography */
+    font-family: var(--font_ui, system-ui, sans-serif);
+    font-size: 12px;
+}
+
+.ls_search_row {
+    /* Layout */
+    display: flex;
+    flex: 0 0 auto;
+    /* Dimensions */
+    padding: 4px;
+}
+
+.ls_search {
+    /* Layout */
+    flex: 1 1 auto;
+    /* Dimensions */
+    min-width: 0;
+    padding: 3px 6px;
+    /* Colors */
+    background: var(--surface, #ffffff);
+    color: var(--text_primary, #161a3a);
+    /* Borders */
+    border: 1px solid var(--border_light, #dcdff3);
+    border-radius: var(--radius_sm, 4px);
+    outline: none;
+    /* Typography */
+    font-family: inherit;
+    font-size: 12px;
+}
+
+.ls_search:focus {
+    /* Borders */
+    border-color: var(--accent, #5b4bdb);
+}
+
+.ls_list {
+    /* Layout */
+    flex: 1 1 auto;
+    overflow-y: auto;
+    /* Dimensions */
+    min-height: 0;
+    /* Effects */
+    scrollbar-width: thin;
+}
+
+.ls_empty {
+    /* Dimensions */
+    padding: 10px;
+    /* Colors */
+    color: var(--text_secondary, #454b78);
+}
+
+.ls_group_label {
+    /* Dimensions */
+    padding: 6px 8px 3px;
+    /* Colors */
+    color: var(--text_secondary, #454b78);
+    /* Borders */
+    border-top: 1px solid var(--border_light, #dcdff3);
+    /* Typography */
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.ls_group_label:first-child {
+    /* Borders */
+    border-top: none;
+}
+/* #endregion */
+
+/* #region rows */
+.ls_row {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Dimensions */
+    padding: 4px 8px;
+    /* Borders */
+    border-top: 2px solid transparent;
+    /* Effects */
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.1s;
+}
+
+.ls_row:hover {
+    /* Colors */
+    background: var(--surface_secondary, #f5f6ff);
+}
+
+.ls_row_off {
+    /* Colors */
+    color: var(--text_secondary, #454b78);
+}
+
+.ls_row_selected {
+    /* Effects */
+    cursor: grab;
+}
+
+.ls_row_selected:active {
+    /* Effects */
+    cursor: grabbing;
+}
+
+.ls_sub_action {
+    /* Colors */
+    background: var(--accent_muted, rgba(91, 75, 219, 0.12));
+}
+
+.ls_sub_group {
+    /* Colors */
+    background: color-mix(in srgb, var(--warning, #f08a24) 24%, var(--surface, #ffffff));
+    color: var(--warning_strong, #c96d10);
+}
+
+.ls_sub_action:hover,
+.ls_sub_group:hover {
+    /* Effects */
+    filter: brightness(0.92);
+}
+
+.ls_dragging {
+    /* Effects */
+    opacity: 0.35;
+}
+
+.ls_drag_target {
+    /* Borders */
+    border-top: 2px solid var(--accent, #5b4bdb);
+}
+/* #endregion */
+
+/* #region dots */
+.ls_dot {
+    /* Layout */
+    flex: 0 0 auto;
+    /* Dimensions */
+    width: 10px;
+    height: 10px;
+    /* Colors */
+    background: var(--text_muted, #767ca3);
+    /* Borders */
+    border-radius: 50%;
+}
+
+.ls_row_selected .ls_dot {
+    /* Colors */
+    background: var(--success, #12a46a);
+}
+
+.ls_row_excluded .ls_dot {
+    /* Colors */
+    background: var(--danger, #e5484d);
+}
+/* #endregion */
+
+.ls_text {
+    /* Layout */
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
